@@ -10,11 +10,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Minimal Progress Tracker',
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Minimal Progress Tracker'),
     );
   }
 }
@@ -44,23 +44,41 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: Icon(_editMode ? Icons.done : Icons.edit),
+            onPressed: () {
+              setState(() {
+                _editMode = !_editMode;
+              });
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
+          scrollDirection: Axis.vertical,
+          shrinkWrap: true,
           itemCount: _data.length,
           itemBuilder: (context, index) {
             final value = _data[index];
             return Card(
-              child: ListTile(
-                  leading: const FlutterLogo(size: 42.0),
-                  title: Text('$value'),
-                  subtitle: const Text('Here is a second line'),
-                  trailing: Icon(_editMode ? Icons.delete : Icons.more_vert),
-                  onLongPress: () {
-                    setState(() {
-                      _editMode = true;
-                    });
-                  }),
-            );
+                child: ListTile(
+              leading: const FlutterLogo(size: 42.0),
+              title: Text('$value'),
+              subtitle: const Text('Here is a second line'),
+              trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                IconButton(
+                  icon: Icon(_editMode ? Icons.delete : Icons.more_vert),
+                  onPressed: _editMode
+                      ? () {
+                          setState(() {
+                            _data.removeAt(index);
+                          });
+                        }
+                      : null,
+                )
+              ]),
+            ));
           }),
       floatingActionButton: FloatingActionButton(
         onPressed: _addExercise,
