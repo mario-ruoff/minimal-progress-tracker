@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const ProgressTracker());
@@ -29,12 +30,42 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  final List _data = <List>[];
+  List<String> _names = [];
+  List<String> _values = [];
   bool _editMode = false;
 
-  void _addExercise() {
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _data.add(['Pullups', 0]);
+      _names = prefs.getStringList('names') ?? [];
+      _values = prefs.getStringList('values') ?? [];
+    });
+  }
+
+  Future<void> _addExercise() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _names = prefs.getStringList('names') ?? [];
+      _values = prefs.getStringList('values') ?? [];
+      _names.add('Pullups');
+      _values.add('0');
+      prefs.setStringList('names', _names);
+      prefs.setStringList('values', _values);
+    });
+  }
+
+  Future<void> _updateValue(index, newValue) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _values = prefs.getStringList('values') ?? [];
+      _values[index] = '$newValue';
+      prefs.setStringList('values', _values);
     });
   }
 
@@ -55,10 +86,10 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
       body: ListView.builder(
-          itemCount: _data.length,
+          itemCount: _names.length,
           itemBuilder: (context, index) {
-            final exercise = _data[index][0];
-            final value = _data[index][1];
+            final exercise = _names[index];
+            final value = int.parse(_values[index]);
             return Card(
                 child: ListTile(
               leading: const FlutterLogo(size: 42.0),
@@ -71,7 +102,8 @@ class _MainPageState extends State<MainPage> {
                         onPressed: _editMode
                             ? () {
                                 setState(() {
-                                  _data.removeAt(index);
+                                  _names.removeAt(index);
+                                  _values.removeAt(index);
                                 });
                               }
                             : null,
@@ -84,15 +116,13 @@ class _MainPageState extends State<MainPage> {
                         onPressed: value <= 0
                             ? null
                             : () {
-                                setState(() {
-                                  _data[index][1] = value - 1;
-                                });
+                                _updateValue(index, value - 1);
                               },
                       ),
                       SizedBox(
                         width: 22,
                         child: Text(
-                          '${_data[index][1]}',
+                          _values[index],
                           style: TextStyle(
                               fontSize: 18, color: Colors.grey.shade700),
                           textAlign: TextAlign.center,
@@ -104,9 +134,7 @@ class _MainPageState extends State<MainPage> {
                         onPressed: value >= 100
                             ? null
                             : () {
-                                setState(() {
-                                  _data[index][1] = value + 1;
-                                });
+                                _updateValue(index, value + 1);
                               },
                       ),
                     ]),
