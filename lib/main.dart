@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProgressTracker());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ProgressTracker extends StatelessWidget {
+  const ProgressTracker({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,28 +14,27 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
       ),
-      home: const MyHomePage(title: 'Minimal Progress Tracker'),
+      home: const MainPage(title: 'Minimal Progress Tracker'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class MainPage extends StatefulWidget {
+  const MainPage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  final _data = <int>[];
-  var _editMode = false;
+class _MainPageState extends State<MainPage> {
+  final List _data = <List>[];
+  bool _editMode = false;
 
   void _addExercise() {
     setState(() {
-      final nextValue = _data.isNotEmpty ? _data[_data.length - 1] + 1 : 1;
-      _data.add(nextValue);
+      _data.add(['Pullups', 0]);
     });
   }
 
@@ -56,35 +55,70 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: ListView.builder(
-          scrollDirection: Axis.vertical,
-          shrinkWrap: true,
           itemCount: _data.length,
           itemBuilder: (context, index) {
-            final value = _data[index];
+            final exercise = _data[index][0];
+            final value = _data[index][1];
             return Card(
                 child: ListTile(
               leading: const FlutterLogo(size: 42.0),
-              title: Text('$value'),
+              title: Text('$exercise'),
               subtitle: const Text('Here is a second line'),
-              trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                IconButton(
-                  icon: Icon(_editMode ? Icons.delete : Icons.more_vert),
-                  onPressed: _editMode
-                      ? () {
-                          setState(() {
-                            _data.removeAt(index);
-                          });
-                        }
-                      : null,
-                )
-              ]),
+              trailing: _editMode
+                  ? Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: _editMode
+                            ? () {
+                                setState(() {
+                                  _data.removeAt(index);
+                                });
+                              }
+                            : null,
+                      )
+                    ])
+                  : Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                      IconButton(
+                        icon: const Icon(Icons.remove),
+                        disabledColor: Colors.grey.shade300,
+                        onPressed: value <= 0
+                            ? null
+                            : () {
+                                setState(() {
+                                  _data[index][1] = value - 1;
+                                });
+                              },
+                      ),
+                      SizedBox(
+                        width: 22,
+                        child: Text(
+                          '${_data[index][1]}',
+                          style: TextStyle(
+                              fontSize: 18, color: Colors.grey.shade700),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        disabledColor: Colors.grey.shade300,
+                        onPressed: value >= 100
+                            ? null
+                            : () {
+                                setState(() {
+                                  _data[index][1] = value + 1;
+                                });
+                              },
+                      ),
+                    ]),
             ));
           }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addExercise,
-        tooltip: 'Add Exercise',
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _editMode
+          ? null
+          : FloatingActionButton(
+              onPressed: _addExercise,
+              tooltip: 'Add Exercise',
+              child: const Icon(Icons.add),
+            ),
     );
   }
 }
