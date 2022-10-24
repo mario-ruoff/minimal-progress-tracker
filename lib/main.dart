@@ -159,6 +159,7 @@ class _MainPageState extends State<MainPage> {
         actions: [
           IconButton(
             icon: Icon(_editMode ? Icons.done : Icons.edit),
+            tooltip: 'Edit exercises',
             onPressed: () {
               setState(() {
                 _editMode = !_editMode;
