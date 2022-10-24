@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math';
 
 void main() {
   runApp(const ProgressTracker());
@@ -31,8 +32,12 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   List<String> _names = [];
+  List<String> _descriptions = [];
   List<String> _values = [];
   bool _editMode = false;
+  String _exerciseName = '';
+  String _exerciseDescription = '';
+  var random = Random();
 
   @override
   void initState() {
@@ -44,6 +49,7 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _names = prefs.getStringList('names') ?? [];
+      _descriptions = prefs.getStringList('descriptions') ?? [];
       _values = prefs.getStringList('values') ?? [];
     });
   }
@@ -52,10 +58,28 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _names = prefs.getStringList('names') ?? [];
+      _descriptions = prefs.getStringList('descriptions') ?? [];
       _values = prefs.getStringList('values') ?? [];
-      _names.add('Pullups');
+      _names.add(_exerciseName);
+      _descriptions.add(_exerciseDescription);
       _values.add('0');
       prefs.setStringList('names', _names);
+      prefs.setStringList('descriptions', _descriptions);
+      prefs.setStringList('values', _values);
+    });
+  }
+
+  Future<void> _removeExercise(index) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _names = prefs.getStringList('names') ?? [];
+      _descriptions = prefs.getStringList('descriptions') ?? [];
+      _values = prefs.getStringList('values') ?? [];
+      _names.removeAt(index);
+      _descriptions.removeAt(index);
+      _values.removeAt(index);
+      prefs.setStringList('names', _names);
+      prefs.setStringList('descriptions', _descriptions);
       prefs.setStringList('values', _values);
     });
   }
@@ -67,6 +91,64 @@ class _MainPageState extends State<MainPage> {
       _values[index] = '$newValue';
       prefs.setStringList('values', _values);
     });
+  }
+
+  Future<void> _newExerciseDialog(BuildContext context) async {
+    setState(() {
+      _exerciseName = '';
+      _exerciseDescription = '';
+    });
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(builder: ((context, setState) {
+            return AlertDialog(
+              title: const Text('Add new exercise'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                        labelText: 'Exercise name', hintText: 'e.g. Pushups'),
+                    onChanged: (value) {
+                      setState(() {
+                        _exerciseName = value;
+                      });
+                    },
+                  ),
+                  TextField(
+                    decoration: const InputDecoration(
+                        labelText: 'Description',
+                        hintText: 'e.g. RRaiaised bar'),
+                    onChanged: (value) {
+                      setState(() {
+                        _exerciseDescription = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                TextButton(
+                  onPressed: _exerciseName.isNotEmpty
+                      ? () {
+                          _addExercise();
+                          Navigator.pop(context);
+                        }
+                      : null,
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          }));
+        });
   }
 
   @override
@@ -85,65 +167,85 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
       ),
-      body: ListView.builder(
+      body: ReorderableListView.builder(
           itemCount: _names.length,
           itemBuilder: (context, index) {
             final exercise = _names[index];
+            final description = _descriptions[index];
             final value = int.parse(_values[index]);
             return Card(
+                key: Key(exercise + random.nextInt(10000).toString()),
                 child: ListTile(
-              leading: const FlutterLogo(size: 42.0),
-              title: Text('$exercise'),
-              subtitle: const Text('Here is a second line'),
-              trailing: _editMode
-                  ? Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: _editMode
-                            ? () {
-                                setState(() {
-                                  _names.removeAt(index);
-                                  _values.removeAt(index);
-                                });
-                              }
-                            : null,
-                      )
-                    ])
-                  : Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                      IconButton(
-                        icon: const Icon(Icons.remove),
-                        disabledColor: Colors.grey.shade300,
-                        onPressed: value <= 0
-                            ? null
-                            : () {
-                                _updateValue(index, value - 1);
-                              },
-                      ),
-                      SizedBox(
-                        width: 22,
-                        child: Text(
-                          _values[index],
-                          style: TextStyle(
-                              fontSize: 18, color: Colors.grey.shade700),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        disabledColor: Colors.grey.shade300,
-                        onPressed: value >= 100
-                            ? null
-                            : () {
-                                _updateValue(index, value + 1);
-                              },
-                      ),
-                    ]),
-            ));
-          }),
+                  leading: _editMode
+                      ? ReorderableDragStartListener(
+                          index: index, child: const Icon(Icons.drag_handle))
+                      : null,
+                  title: Text(exercise),
+                  subtitle: Text(description),
+                  trailing: _editMode
+                      ? Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: _editMode
+                                ? () {
+                                    setState(() {
+                                      _removeExercise(index);
+                                    });
+                                  }
+                                : null,
+                          )
+                        ])
+                      : Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                          IconButton(
+                            icon: const Icon(Icons.remove),
+                            disabledColor: Colors.grey.shade300,
+                            onPressed: value <= 0
+                                ? null
+                                : () {
+                                    _updateValue(index, value - 1);
+                                  },
+                          ),
+                          SizedBox(
+                            width: 22,
+                            child: Text(
+                              _values[index],
+                              style: TextStyle(
+                                  fontSize: 18, color: Colors.grey.shade700),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add),
+                            disabledColor: Colors.grey.shade300,
+                            onPressed: value >= 100
+                                ? null
+                                : () {
+                                    _updateValue(index, value + 1);
+                                  },
+                          ),
+                        ]),
+                ));
+          },
+          onReorder: (oldIndex, newIndex) {
+            setState(() {
+              if (newIndex > oldIndex) {
+                newIndex -= 1;
+              }
+              final nameItem = _names.removeAt(oldIndex);
+              _names.insert(newIndex, nameItem);
+              final descriptionItem = _descriptions.removeAt(oldIndex);
+              _descriptions.insert(newIndex, descriptionItem);
+              final valueItem = _values.removeAt(oldIndex);
+              _values.insert(newIndex, valueItem);
+            });
+          },
+          buildDefaultDragHandles: false),
       floatingActionButton: _editMode
           ? null
           : FloatingActionButton(
-              onPressed: _addExercise,
+              onPressed: () {
+                _newExerciseDialog(context);
+              },
               tooltip: 'Add Exercise',
               child: const Icon(Icons.add),
             ),
