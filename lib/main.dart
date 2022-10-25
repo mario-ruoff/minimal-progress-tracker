@@ -119,8 +119,7 @@ class _MainPageState extends State<MainPage> {
                   ),
                   TextField(
                     decoration: const InputDecoration(
-                        labelText: 'Description',
-                        hintText: 'e.g. RRaiaised bar'),
+                        labelText: 'Description', hintText: 'e.g. Raised bar'),
                     onChanged: (value) {
                       setState(() {
                         _exerciseDescription = value;

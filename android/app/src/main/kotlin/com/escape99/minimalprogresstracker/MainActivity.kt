@@ -1,4 +1,4 @@
-package com.example.minimal_progress_tracker
+package com.escape99.minimalprogresstracker
 
 import io.flutter.embedding.android.FlutterActivity
 

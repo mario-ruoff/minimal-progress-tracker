@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.minimal_progress_tracker">
+    package="com.escape99.minimalprogresstracker">
    <application
         android:label="minimal_progress_tracker"
         android:name="${applicationName}"
