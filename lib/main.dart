@@ -15,6 +15,7 @@ class ProgressTracker extends StatelessWidget {
       title: 'Minimal Progress Tracker',
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
+        useMaterial3: true,
       ),
       home: const MainPage(title: 'Minimal Progress Tracker'),
     );
@@ -31,6 +32,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  int currentPageIndex = 0;
   List<String> _names = [];
   List<String> _descriptions = [];
   List<String> _values = [];
@@ -167,80 +169,92 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
       ),
-      body: ReorderableListView.builder(
-          itemCount: _names.length,
-          itemBuilder: (context, index) {
-            final exercise = _names[index];
-            final description = _descriptions[index];
-            final value = int.parse(_values[index]);
-            return Card(
-                key: Key(exercise + random.nextInt(10000).toString()),
-                child: ListTile(
-                  leading: _editMode
-                      ? ReorderableDragStartListener(
-                          index: index, child: const Icon(Icons.drag_handle))
-                      : null,
-                  title: Text(exercise),
-                  subtitle: Text(description),
-                  trailing: _editMode
-                      ? Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: _editMode
-                                ? () {
-                                    setState(() {
-                                      _removeExercise(index);
-                                    });
-                                  }
-                                : null,
-                          )
-                        ])
-                      : Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                          IconButton(
-                            icon: const Icon(Icons.remove),
-                            disabledColor: Colors.grey.shade300,
-                            onPressed: value <= 0
-                                ? null
-                                : () {
-                                    _updateValue(index, value - 1);
-                                  },
-                          ),
-                          SizedBox(
-                            width: 22,
-                            child: Text(
-                              _values[index],
-                              style: TextStyle(
-                                  fontSize: 18, color: Colors.grey.shade700),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            disabledColor: Colors.grey.shade300,
-                            onPressed: value >= 100
-                                ? null
-                                : () {
-                                    _updateValue(index, value + 1);
-                                  },
-                          ),
-                        ]),
-                ));
-          },
-          onReorder: (oldIndex, newIndex) {
-            setState(() {
-              if (newIndex > oldIndex) {
-                newIndex -= 1;
-              }
-              final nameItem = _names.removeAt(oldIndex);
-              _names.insert(newIndex, nameItem);
-              final descriptionItem = _descriptions.removeAt(oldIndex);
-              _descriptions.insert(newIndex, descriptionItem);
-              final valueItem = _values.removeAt(oldIndex);
-              _values.insert(newIndex, valueItem);
-            });
-          },
-          buildDefaultDragHandles: false),
-      floatingActionButton: _editMode
+      body: <Widget>[
+        ReorderableListView.builder(
+            itemCount: _names.length,
+            itemBuilder: (context, index) {
+              final exercise = _names[index];
+              final description = _descriptions[index];
+              final value = int.parse(_values[index]);
+              return Card(
+                  key: Key(exercise + random.nextInt(10000).toString()),
+                  child: ListTile(
+                    leading: _editMode
+                        ? ReorderableDragStartListener(
+                            index: index, child: const Icon(Icons.drag_handle))
+                        : null,
+                    title: Text(exercise),
+                    subtitle: Text(description),
+                    trailing: _editMode
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: _editMode
+                                      ? () {
+                                          setState(() {
+                                            _removeExercise(index);
+                                          });
+                                        }
+                                      : null,
+                                )
+                              ])
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                                IconButton(
+                                  icon: const Icon(Icons.remove),
+                                  disabledColor: Colors.grey.shade300,
+                                  onPressed: value <= 0
+                                      ? null
+                                      : () {
+                                          _updateValue(index, value - 1);
+                                        },
+                                ),
+                                SizedBox(
+                                  width: 22,
+                                  child: Text(
+                                    _values[index],
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.grey.shade700),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  disabledColor: Colors.grey.shade300,
+                                  onPressed: value >= 100
+                                      ? null
+                                      : () {
+                                          _updateValue(index, value + 1);
+                                        },
+                                ),
+                              ]),
+                  ));
+            },
+            onReorder: (oldIndex, newIndex) {
+              setState(() {
+                if (newIndex > oldIndex) {
+                  newIndex -= 1;
+                }
+                final nameItem = _names.removeAt(oldIndex);
+                _names.insert(newIndex, nameItem);
+                final descriptionItem = _descriptions.removeAt(oldIndex);
+                _descriptions.insert(newIndex, descriptionItem);
+                final valueItem = _values.removeAt(oldIndex);
+                _values.insert(newIndex, valueItem);
+              });
+            },
+            buildDefaultDragHandles: false),
+        Container(
+          color: Colors.green,
+          alignment: Alignment.center,
+          child: const Text('Page 2'),
+        ),
+      ][currentPageIndex],
+      floatingActionButton: _editMode || currentPageIndex == 1
           ? null
           : FloatingActionButton(
               onPressed: () {
@@ -249,6 +263,24 @@ class _MainPageState extends State<MainPage> {
               tooltip: 'Add Exercise',
               child: const Icon(Icons.add),
             ),
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (int index) {
+          setState(() {
+            currentPageIndex = index;
+          });
+        },
+        selectedIndex: currentPageIndex,
+        destinations: const <Widget>[
+          NavigationDestination(
+            icon: Icon(Icons.fitness_center),
+            label: 'Exercises',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart),
+            label: 'Statistics',
+          ),
+        ],
+      ),
     );
   }
 }
