@@ -2,7 +2,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class Statistics extends StatefulWidget {
-  const Statistics({super.key});
+  const Statistics({super.key, required this.names, required this.values});
+
+  final List<String> names;
+  final List<String> values;
 
   @override
   State<Statistics> createState() => _StatisticsState();
@@ -18,50 +21,59 @@ class _StatisticsState extends State<Statistics> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        AspectRatio(
-          aspectRatio: 1.70,
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(
-                Radius.circular(18),
-              ),
-              color: Color(0xff232d37),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(
-                right: 18,
-                left: 12,
-                top: 24,
-                bottom: 12,
-              ),
-              child: LineChart(
-                showAvg ? avgData() : mainData(),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 60,
-          height: 34,
-          child: TextButton(
-            onPressed: () {
-              setState(() {
-                showAvg = !showAvg;
-              });
-            },
-            child: Text(
-              'avg',
-              style: TextStyle(
-                fontSize: 12,
-                color: showAvg ? Colors.white.withOpacity(0.5) : Colors.white,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+    return ListView.builder(
+        padding: const EdgeInsets.only(top: 10),
+        itemCount: widget.names.length,
+        itemBuilder: (context, index) {
+          return Container(
+              margin: const EdgeInsets.all(5),
+              child: Stack(
+                children: <Widget>[
+                  AspectRatio(
+                    aspectRatio: 2.0,
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(12),
+                        ),
+                        color: Color(0xff232d37),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          right: 18,
+                          left: 12,
+                          top: 24,
+                          bottom: 12,
+                        ),
+                        child: LineChart(
+                          showAvg ? avgData() : mainData(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 60,
+                    height: 34,
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          showAvg = !showAvg;
+                        });
+                      },
+                      child: Text(
+                        widget.names[index],
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: showAvg
+                              ? Colors.white.withOpacity(0.5)
+                              : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ));
+        });
   }
 
   Widget bottomTitleWidgets(double value, TitleMeta meta) {
