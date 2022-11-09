@@ -7,14 +7,14 @@ class ExerciseList extends StatefulWidget {
       required this.editMode,
       required this.names,
       required this.descriptions,
-      required this.values,
+      required this.valueHistories,
       required this.removeExercise,
       required this.updateExercise});
 
   final bool editMode;
   final List<String> names;
   final List<String> descriptions;
-  final List<String> values;
+  final List<Map<DateTime, int>> valueHistories;
   final Function(int) removeExercise;
   final Function(int, int) updateExercise;
 
@@ -29,11 +29,11 @@ class _ExerciseListState extends State<ExerciseList> {
   Widget build(BuildContext context) {
     return ReorderableListView.builder(
         padding: const EdgeInsets.only(top: 10),
-        itemCount: widget.names.length,
+        itemCount: widget.valueHistories.length,
         itemBuilder: (context, index) {
           final exercise = widget.names[index];
           final description = widget.descriptions[index];
-          final value = int.parse(widget.values[index]);
+          final value = widget.valueHistories[index].values.last;
           return Card(
               key: Key(exercise + random.nextInt(10000).toString()),
               child: ListTile(
@@ -69,7 +69,7 @@ class _ExerciseListState extends State<ExerciseList> {
                         SizedBox(
                           width: 22,
                           child: Text(
-                            widget.values[index],
+                            "$value",
                             style: TextStyle(
                                 fontSize: 18, color: Colors.grey.shade700),
                             textAlign: TextAlign.center,
@@ -96,8 +96,8 @@ class _ExerciseListState extends State<ExerciseList> {
             widget.names.insert(newIndex, nameItem);
             final descriptionItem = widget.descriptions.removeAt(oldIndex);
             widget.descriptions.insert(newIndex, descriptionItem);
-            final valueItem = widget.values.removeAt(oldIndex);
-            widget.values.insert(newIndex, valueItem);
+            final valueItem = widget.valueHistories.removeAt(oldIndex);
+            widget.valueHistories.insert(newIndex, valueItem);
           });
         },
         buildDefaultDragHandles: false);

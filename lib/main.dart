@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:minimal_progress_tracker/screens/exercise_list.dart';
 import 'package:minimal_progress_tracker/screens/statistics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 void main() {
   runApp(const ProgressTracker());
@@ -45,7 +46,7 @@ class _MainPageState extends State<MainPage> {
   bool _editMode = false;
   List<String> _names = [];
   List<String> _descriptions = [];
-  List<String> _values = [];
+  List<Map<DateTime, int>> _valueHistories = [];
   String _exerciseName = '';
   String _exerciseDescription = '';
 
@@ -60,7 +61,8 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _names = prefs.getStringList('names') ?? [];
       _descriptions = prefs.getStringList('descriptions') ?? [];
-      _values = prefs.getStringList('values') ?? [];
+      _valueHistories =
+          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
     });
   }
 
@@ -69,13 +71,15 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _names = prefs.getStringList('names') ?? [];
       _descriptions = prefs.getStringList('descriptions') ?? [];
-      _values = prefs.getStringList('values') ?? [];
+      _valueHistories =
+          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
       _names.add(_exerciseName);
       _descriptions.add(_exerciseDescription);
-      _values.add('0');
+      _valueHistories.add({getCurrentDate(): 0});
       prefs.setStringList('names', _names);
       prefs.setStringList('descriptions', _descriptions);
-      prefs.setStringList('values', _values);
+      prefs.setStringList(
+          'valueHistories', getHistoriesStringList(_valueHistories));
     });
   }
 
@@ -84,22 +88,56 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _names = prefs.getStringList('names') ?? [];
       _descriptions = prefs.getStringList('descriptions') ?? [];
-      _values = prefs.getStringList('values') ?? [];
+      _valueHistories =
+          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
       _names.removeAt(index);
       _descriptions.removeAt(index);
-      _values.removeAt(index);
+      _valueHistories.removeAt(index);
       prefs.setStringList('names', _names);
       prefs.setStringList('descriptions', _descriptions);
-      prefs.setStringList('values', _values);
+      prefs.setStringList(
+          'valueHistories', getHistoriesStringList(_valueHistories));
     });
+  }
+
+  List<Map<DateTime, int>> getHistoriesMapList(
+      List<String> historiesStringList) {
+    List<Map<DateTime, int>> returnList = [];
+    for (String historyString in historiesStringList) {
+      dynamic historyDict = jsonDecode(historyString);
+      Map<DateTime, int> historyMap = {};
+      for (String historyDate in historyDict.keys) {
+        historyMap[DateTime.parse(historyDate)] = historyDict[historyDate];
+      }
+      returnList.add(historyMap);
+    }
+    return returnList;
+  }
+
+  List<String> getHistoriesStringList(
+      List<Map<DateTime, int>> historiesMapList) {
+    List<String> returnList = [];
+    for (Map<DateTime, int> historyMap in historiesMapList) {
+      String historyString = jsonEncode(
+          historyMap.map((key, value) => MapEntry(key.toString(), value)));
+      returnList.add(historyString);
+    }
+    return returnList;
+  }
+
+  DateTime getCurrentDate() {
+    return DateTime(
+        DateTime.now().year, DateTime.now().month, DateTime.now().day);
   }
 
   Future<void> _updateExercise(index, newValue) async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _values = prefs.getStringList('values') ?? [];
-      _values[index] = '$newValue';
-      prefs.setStringList('values', _values);
+      _valueHistories =
+          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+      _valueHistories[index][getCurrentDate()] = newValue;
+      prefs.setStringList(
+          'valueHistories', getHistoriesStringList(_valueHistories));
     });
   }
 
@@ -184,10 +222,10 @@ class _MainPageState extends State<MainPage> {
             editMode: _editMode,
             names: _names,
             descriptions: _descriptions,
-            values: _values,
+            valueHistories: _valueHistories,
             removeExercise: _removeExercise,
             updateExercise: _updateExercise),
-        Statistics(names: _names, values: _values),
+        Statistics(names: _names, valueHistories: _valueHistories),
       ][currentPageIndex],
       floatingActionButton: !_editMode && currentPageIndex == 0
           ? FloatingActionButton(

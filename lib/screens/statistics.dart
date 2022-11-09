@@ -2,10 +2,11 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class Statistics extends StatefulWidget {
-  const Statistics({super.key, required this.names, required this.values});
+  const Statistics(
+      {super.key, required this.names, required this.valueHistories});
 
   final List<String> names;
-  final List<String> values;
+  final List<Map<DateTime, int>> valueHistories;
 
   @override
   State<Statistics> createState() => _StatisticsState();
@@ -16,8 +17,8 @@ class _StatisticsState extends State<Statistics> {
     const Color(0xff23b6e6),
     const Color(0xff02d39a),
   ];
-
-  bool showAvg = false;
+  final double maxX = 11;
+  final double maxY = 6;
 
   @override
   Widget build(BuildContext context) {
@@ -42,35 +43,23 @@ class _StatisticsState extends State<Statistics> {
                         padding: const EdgeInsets.only(
                           right: 18,
                           left: 12,
-                          top: 24,
+                          top: 38,
                           bottom: 12,
                         ),
-                        child: LineChart(
-                          showAvg ? avgData() : mainData(),
-                        ),
+                        child:
+                            LineChart(mainData(widget.valueHistories, index)),
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 60,
-                    height: 34,
-                    child: TextButton(
-                      onPressed: () {
-                        setState(() {
-                          showAvg = !showAvg;
-                        });
-                      },
+                  Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       child: Text(
                         widget.names[index],
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: showAvg
-                              ? Colors.white.withOpacity(0.5)
-                              : Colors.white,
+                        style: const TextStyle(
+                          fontSize: 18,
                         ),
-                      ),
-                    ),
-                  ),
+                      )),
                 ],
               ));
         });
@@ -113,13 +102,13 @@ class _StatisticsState extends State<Statistics> {
     String text;
     switch (value.toInt()) {
       case 1:
-        text = '10K';
+        text = '10';
         break;
       case 3:
-        text = '30k';
+        text = '30';
         break;
       case 5:
-        text = '50k';
+        text = '50';
         break;
       default:
         return Container();
@@ -128,7 +117,7 @@ class _StatisticsState extends State<Statistics> {
     return Text(text, style: style, textAlign: TextAlign.left);
   }
 
-  LineChartData mainData() {
+  LineChartData mainData(List<Map<DateTime, int>> valueHistories, int index) {
     return LineChartData(
       gridData: FlGridData(
         show: true,
@@ -178,21 +167,16 @@ class _StatisticsState extends State<Statistics> {
         border: Border.all(color: const Color(0xff37434d)),
       ),
       minX: 0,
-      maxX: 11,
+      maxX: maxX,
       minY: 0,
-      maxY: 6,
+      maxY: maxY,
       lineBarsData: [
         LineChartBarData(
-          spots: const [
-            FlSpot(0, 3),
-            FlSpot(2.6, 2),
-            FlSpot(4.9, 5),
-            FlSpot(6.8, 3.1),
-            FlSpot(8, 4),
-            FlSpot(9.5, 3),
-            FlSpot(11, 4),
+          spots: [
+            FlSpot(0, valueHistories[index].values.last.toDouble()),
+            FlSpot(11, valueHistories[index].values.last.toDouble())
           ],
-          isCurved: true,
+          isCurved: false,
           gradient: LinearGradient(
             colors: gradientColors,
           ),
@@ -207,103 +191,6 @@ class _StatisticsState extends State<Statistics> {
               colors: gradientColors
                   .map((color) => color.withOpacity(0.3))
                   .toList(),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  LineChartData avgData() {
-    return LineChartData(
-      lineTouchData: LineTouchData(enabled: false),
-      gridData: FlGridData(
-        show: true,
-        drawHorizontalLine: true,
-        verticalInterval: 1,
-        horizontalInterval: 1,
-        getDrawingVerticalLine: (value) {
-          return FlLine(
-            color: const Color(0xff37434d),
-            strokeWidth: 1,
-          );
-        },
-        getDrawingHorizontalLine: (value) {
-          return FlLine(
-            color: const Color(0xff37434d),
-            strokeWidth: 1,
-          );
-        },
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 30,
-            getTitlesWidget: bottomTitleWidgets,
-            interval: 1,
-          ),
-        ),
-        leftTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            getTitlesWidget: leftTitleWidgets,
-            reservedSize: 42,
-            interval: 1,
-          ),
-        ),
-        topTitles: AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        rightTitles: AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-      ),
-      borderData: FlBorderData(
-        show: true,
-        border: Border.all(color: const Color(0xff37434d)),
-      ),
-      minX: 0,
-      maxX: 11,
-      minY: 0,
-      maxY: 6,
-      lineBarsData: [
-        LineChartBarData(
-          spots: const [
-            FlSpot(0, 3.44),
-            FlSpot(2.6, 3.44),
-            FlSpot(4.9, 3.44),
-            FlSpot(6.8, 3.44),
-            FlSpot(8, 3.44),
-            FlSpot(9.5, 3.44),
-            FlSpot(11, 3.44),
-          ],
-          isCurved: true,
-          gradient: LinearGradient(
-            colors: [
-              ColorTween(begin: gradientColors[0], end: gradientColors[1])
-                  .lerp(0.2)!,
-              ColorTween(begin: gradientColors[0], end: gradientColors[1])
-                  .lerp(0.2)!,
-            ],
-          ),
-          barWidth: 5,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: false,
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            gradient: LinearGradient(
-              colors: [
-                ColorTween(begin: gradientColors[0], end: gradientColors[1])
-                    .lerp(0.2)!
-                    .withOpacity(0.1),
-                ColorTween(begin: gradientColors[0], end: gradientColors[1])
-                    .lerp(0.2)!
-                    .withOpacity(0.1),
-              ],
             ),
           ),
         ),
