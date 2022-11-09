@@ -163,16 +163,17 @@ class _StatisticsState extends State<Statistics> {
     if (maxHistoryValue < minValueScale) {
       maxHistoryValue = minValueScale;
     }
-    double previousYValue = 0;
+    double? previousYValue;
 
     // Add all values from the history
     valueHistory.forEach((key, value) {
       int daysToFirst = key.difference(firstDay).inDays;
-      double xValue = daySpan > 0 ? daysToFirst / daySpan * maxX : 0;
-      double yValue = maxHistoryValue > 0 ? value / maxHistoryValue * maxY : 0;
+      // Add 1 to dayspan to fit last value in diagram
+      double xValue = daysToFirst / (daySpan + 1) * maxX;
+      double yValue = value / maxHistoryValue * maxY;
       // Add a spot if the value has changed
-      if (previousYValue != yValue) {
-        spots.add(FlSpot(xValue, previousYValue));
+      if (previousYValue != null && previousYValue != yValue) {
+        spots.add(FlSpot(xValue, previousYValue!));
       }
       // Add actual spot in history
       spots.add(FlSpot(xValue, yValue));
@@ -181,7 +182,7 @@ class _StatisticsState extends State<Statistics> {
     });
 
     // Add last horizontal value line to current date
-    spots.add(FlSpot(maxX, previousYValue));
+    if (previousYValue != null) spots.add(FlSpot(maxX, previousYValue!));
     return spots;
   }
 
