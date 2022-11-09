@@ -59,7 +59,6 @@ class _ExerciseListState extends State<ExerciseList> {
                     : Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
                         IconButton(
                           icon: const Icon(Icons.remove),
-                          disabledColor: Colors.grey.shade300,
                           onPressed: value <= 0
                               ? null
                               : () {
@@ -70,14 +69,12 @@ class _ExerciseListState extends State<ExerciseList> {
                           width: 22,
                           child: Text(
                             "$value",
-                            style: TextStyle(
-                                fontSize: 18, color: Colors.grey.shade700),
+                            style: const TextStyle(fontSize: 18),
                             textAlign: TextAlign.center,
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.add),
-                          disabledColor: Colors.grey.shade300,
                           onPressed: value >= 100
                               ? null
                               : () {
