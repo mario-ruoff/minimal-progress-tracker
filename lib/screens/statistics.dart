@@ -133,6 +133,8 @@ class _StatisticsState extends State<Statistics> {
           ),
           barWidth: 5,
           isStrokeCapRound: true,
+          isStrokeJoinRound: true,
+          isStepLineChart: true,
           dotData: FlDotData(
             show: false,
           ),
@@ -163,26 +165,15 @@ class _StatisticsState extends State<Statistics> {
     if (maxHistoryValue < minValueScale) {
       maxHistoryValue = minValueScale;
     }
-    double? previousYValue;
-
     // Add all values from the history
     valueHistory.forEach((key, value) {
       int daysToFirst = key.difference(firstDay).inDays;
-      // Add 1 to dayspan to fit last value in diagram
-      double xValue = daysToFirst / (daySpan + 1) * maxX;
+      double xValue = daysToFirst / daySpan * maxX;
       double yValue = value / maxHistoryValue * maxY;
-      // Add a spot if the value has changed
-      if (previousYValue != null && previousYValue != yValue) {
-        spots.add(FlSpot(xValue, previousYValue!));
-      }
-      // Add actual spot in history
       spots.add(FlSpot(xValue, yValue));
       // Save previous value
-      previousYValue = yValue;
+      // previousYValue = yValue;
     });
-
-    // Add last horizontal value line to current date
-    if (previousYValue != null) spots.add(FlSpot(maxX, previousYValue!));
     return spots;
   }
 
