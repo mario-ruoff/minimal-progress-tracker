@@ -58,11 +58,17 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
+
     setState(() {
+      _valueHistories = getHistoriesMapList(
+          ['{"2022-11-08 00:00:00.000":2, "2022-11-09 00:00:00.000":3}']);
+      prefs.setStringList(
+          'valueHistories', getHistoriesStringList(_valueHistories));
+
       _names = prefs.getStringList('names') ?? [];
       _descriptions = prefs.getStringList('descriptions') ?? [];
-      _valueHistories =
-          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+      // _valueHistories =
+      //     getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
     });
   }
 
@@ -100,6 +106,17 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  Future<void> _updateExercise(index, newValue) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _valueHistories =
+          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+      _valueHistories[index][getCurrentDate()] = newValue;
+      prefs.setStringList(
+          'valueHistories', getHistoriesStringList(_valueHistories));
+    });
+  }
+
   List<Map<DateTime, int>> getHistoriesMapList(
       List<String> historiesStringList) {
     List<Map<DateTime, int>> returnList = [];
@@ -128,17 +145,6 @@ class _MainPageState extends State<MainPage> {
   DateTime getCurrentDate() {
     return DateTime(
         DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  }
-
-  Future<void> _updateExercise(index, newValue) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _valueHistories =
-          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
-      _valueHistories[index][getCurrentDate()] = newValue;
-      prefs.setStringList(
-          'valueHistories', getHistoriesStringList(_valueHistories));
-    });
   }
 
   Future<void> _newExerciseDialog(BuildContext context) async {
@@ -225,7 +231,10 @@ class _MainPageState extends State<MainPage> {
             valueHistories: _valueHistories,
             removeExercise: _removeExercise,
             updateExercise: _updateExercise),
-        Statistics(names: _names, valueHistories: _valueHistories),
+        Statistics(
+            names: _names,
+            valueHistories: _valueHistories,
+            currentDate: getCurrentDate()),
       ][currentPageIndex],
       floatingActionButton: !_editMode && currentPageIndex == 0
           ? FloatingActionButton(

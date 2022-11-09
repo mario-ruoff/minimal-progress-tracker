@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 
 class Statistics extends StatefulWidget {
   const Statistics(
-      {super.key, required this.names, required this.valueHistories});
+      {super.key,
+      required this.names,
+      required this.valueHistories,
+      required this.currentDate});
 
   final List<String> names;
   final List<Map<DateTime, int>> valueHistories;
+  final DateTime currentDate;
 
   @override
   State<Statistics> createState() => _StatisticsState();
@@ -19,12 +23,14 @@ class _StatisticsState extends State<Statistics> {
   ];
   final double maxX = 11;
   final double maxY = 6;
+  final int minDays = 7;
+  final int minValueScale = 5;
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
         padding: const EdgeInsets.only(top: 10),
-        itemCount: widget.names.length,
+        itemCount: widget.valueHistories.length,
         itemBuilder: (context, index) {
           return Container(
               margin: const EdgeInsets.all(5),
@@ -47,7 +53,7 @@ class _StatisticsState extends State<Statistics> {
                           bottom: 12,
                         ),
                         child:
-                            LineChart(mainData(widget.valueHistories, index)),
+                            LineChart(mainData(widget.valueHistories[index])),
                       ),
                     ),
                   ),
@@ -65,59 +71,7 @@ class _StatisticsState extends State<Statistics> {
         });
   }
 
-  Widget bottomTitleWidgets(double value, TitleMeta meta) {
-    const style = TextStyle(
-      color: Color(0xff68737d),
-      fontWeight: FontWeight.bold,
-      fontSize: 16,
-    );
-    Widget text;
-    switch (value.toInt()) {
-      case 2:
-        text = const Text('MAR', style: style);
-        break;
-      case 5:
-        text = const Text('JUN', style: style);
-        break;
-      case 8:
-        text = const Text('SEP', style: style);
-        break;
-      default:
-        text = const Text('', style: style);
-        break;
-    }
-
-    return SideTitleWidget(
-      axisSide: meta.axisSide,
-      child: text,
-    );
-  }
-
-  Widget leftTitleWidgets(double value, TitleMeta meta) {
-    const style = TextStyle(
-      color: Color(0xff67727d),
-      fontWeight: FontWeight.bold,
-      fontSize: 15,
-    );
-    String text;
-    switch (value.toInt()) {
-      case 1:
-        text = '10';
-        break;
-      case 3:
-        text = '30';
-        break;
-      case 5:
-        text = '50';
-        break;
-      default:
-        return Container();
-    }
-
-    return Text(text, style: style, textAlign: TextAlign.left);
-  }
-
-  LineChartData mainData(List<Map<DateTime, int>> valueHistories, int index) {
+  LineChartData mainData(Map<DateTime, int> valueHistory) {
     return LineChartData(
       gridData: FlGridData(
         show: true,
@@ -172,10 +126,7 @@ class _StatisticsState extends State<Statistics> {
       maxY: maxY,
       lineBarsData: [
         LineChartBarData(
-          spots: [
-            FlSpot(0, valueHistories[index].values.last.toDouble()),
-            FlSpot(11, valueHistories[index].values.last.toDouble())
-          ],
+          spots: getHistorySpots(valueHistory),
           isCurved: false,
           gradient: LinearGradient(
             colors: gradientColors,
@@ -196,5 +147,103 @@ class _StatisticsState extends State<Statistics> {
         ),
       ],
     );
+  }
+
+  List<FlSpot> getHistorySpots(Map<DateTime, int> valueHistory) {
+    List<FlSpot> spots = [];
+    DateTime firstDay = valueHistory.keys.first;
+    int daySpan = widget.currentDate.difference(firstDay).inDays;
+    // If too few days, expand day span
+    if (daySpan < minDays) {
+      firstDay = widget.currentDate.subtract(Duration(days: minDays));
+      daySpan = minDays;
+    }
+    int maxHistoryValue = getMaxValue(valueHistory);
+    // If max value too small, expand max value
+    if (maxHistoryValue < minValueScale) {
+      maxHistoryValue = minValueScale;
+    }
+    double previousYValue = 0;
+
+    // Add all values from the history
+    valueHistory.forEach((key, value) {
+      int daysToFirst = key.difference(firstDay).inDays;
+      double xValue = daySpan > 0 ? daysToFirst / daySpan * maxX : 0;
+      double yValue = maxHistoryValue > 0 ? value / maxHistoryValue * maxY : 0;
+      // Add a spot if the value has changed
+      if (previousYValue != yValue) {
+        spots.add(FlSpot(xValue, previousYValue));
+      }
+      // Add actual spot in history
+      spots.add(FlSpot(xValue, yValue));
+      // Save previous value
+      previousYValue = yValue;
+    });
+
+    // Add last horizontal value line to current date
+    spots.add(FlSpot(maxX, previousYValue));
+    return spots;
+  }
+
+  int getMaxValue(Map<DateTime, int> valueHistory) {
+    int maxValue = 0;
+    valueHistory.forEach((key, value) {
+      if (value > maxValue) {
+        maxValue = value;
+      }
+    });
+    return maxValue;
+  }
+
+  Widget bottomTitleWidgets(double value, TitleMeta meta) {
+    const style = TextStyle(
+      color: Color(0xff68737d),
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    );
+    Widget text;
+    switch (value.toInt()) {
+      case 2:
+        text = const Text('MAR', style: style);
+        break;
+      case 5:
+        text = const Text('JUN', style: style);
+        break;
+      case 8:
+        text = const Text('SEP', style: style);
+        break;
+      default:
+        text = const Text('', style: style);
+        break;
+    }
+
+    return SideTitleWidget(
+      axisSide: meta.axisSide,
+      child: text,
+    );
+  }
+
+  Widget leftTitleWidgets(double value, TitleMeta meta) {
+    const style = TextStyle(
+      color: Color(0xff67727d),
+      fontWeight: FontWeight.bold,
+      fontSize: 15,
+    );
+    String text;
+    switch (value.toInt()) {
+      case 1:
+        text = '10';
+        break;
+      case 3:
+        text = '30';
+        break;
+      case 5:
+        text = '50';
+        break;
+      default:
+        return Container();
+    }
+
+    return Text(text, style: style, textAlign: TextAlign.left);
   }
 }
