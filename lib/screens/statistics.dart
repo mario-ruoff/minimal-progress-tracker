@@ -220,7 +220,7 @@ class _StatisticsState extends State<Statistics> {
     if (intValue == (meta.max / 3 - meta.max / 6).toInt() ||
         intValue == (meta.max / 3 * 2 - meta.max / 6).toInt() ||
         intValue == (meta.max - meta.max / 6).toInt()) {
-      if (meta.max > 500) {
+      if (meta.max < 500) {
         text = Text(DateFormat.Md(locale).format(valueDate), style: style);
       } else {
         text = Text(DateFormat.yM(locale).format(valueDate), style: style);
