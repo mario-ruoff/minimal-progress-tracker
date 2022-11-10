@@ -60,16 +60,15 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      _valueHistories = getHistoriesMapList([
-        '{"2022-10-21 00:00:00.000":2, "2022-10-22 00:00:00.000":3, "2022-10-24 00:00:00.000":0, "2022-10-25 00:00:00.000":2, "2022-10-26 00:00:00.000":3, "2022-10-28 00:00:00.000":5, "2022-10-29 00:00:00.000":1, "2022-10-30 00:00:00.000":5, "2022-10-31 00:00:00.000":2, "2022-11-01 00:00:00.000":1, "2022-11-05 00:00:00.000":2, "2022-11-06 00:00:00.000":2, "2022-11-08 00:00:00.000":3, "2022-11-09 00:00:00.000":4}'
-      ]);
-      prefs.setStringList(
-          'valueHistories', getHistoriesStringList(_valueHistories));
-
+      // _valueHistories = getHistoriesMapList([
+      //   '{"2022-10-21 00:00:00.000":2, "2022-10-22 00:00:00.000":3, "2022-10-24 00:00:00.000":0, "2022-10-25 00:00:00.000":2, "2022-10-26 00:00:00.000":3, "2022-10-28 00:00:00.000":5, "2022-10-29 00:00:00.000":1, "2022-10-30 00:00:00.000":5, "2022-10-31 00:00:00.000":2, "2022-11-01 00:00:00.000":1, "2022-11-05 00:00:00.000":2, "2022-11-06 00:00:00.000":2, "2022-11-08 00:00:00.000":3, "2022-11-09 00:00:00.000":4}'
+      // ]);
+      // prefs.setStringList(
+      //     'valueHistories', getHistoriesStringList(_valueHistories));
       _names = prefs.getStringList('names') ?? [];
       _descriptions = prefs.getStringList('descriptions') ?? [];
-      // _valueHistories =
-      //     getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+      _valueHistories =
+          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
     });
   }
 
