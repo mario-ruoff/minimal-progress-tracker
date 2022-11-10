@@ -223,19 +223,32 @@ class _MainPageState extends State<MainPage> {
                 ),
               ],
       ),
-      body: <Widget>[
-        ExerciseList(
-            editMode: _editMode,
-            names: _names,
-            descriptions: _descriptions,
-            valueHistories: _valueHistories,
-            removeExercise: _removeExercise,
-            updateExercise: _updateExercise),
-        Statistics(
-            names: _names,
-            valueHistories: _valueHistories,
-            currentDate: getCurrentDate()),
-      ][currentPageIndex],
+      body: _valueHistories.isEmpty
+          ? Container(
+              padding: const EdgeInsets.symmetric(
+                vertical: 20,
+                horizontal: 10,
+              ),
+              child: Center(
+                child: Text(
+                  'No exercises added yet',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+            )
+          : <Widget>[
+              ExerciseList(
+                  editMode: _editMode,
+                  names: _names,
+                  descriptions: _descriptions,
+                  valueHistories: _valueHistories,
+                  removeExercise: _removeExercise,
+                  updateExercise: _updateExercise),
+              Statistics(
+                  names: _names,
+                  valueHistories: _valueHistories,
+                  currentDate: getCurrentDate()),
+            ][currentPageIndex],
       floatingActionButton: !_editMode && currentPageIndex == 0
           ? FloatingActionButton(
               onPressed: () {
