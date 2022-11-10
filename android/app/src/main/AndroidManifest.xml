@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.escape99.minimalprogresstracker">
    <application
-        android:label="minimal_progress_tracker"
+        android:label="Minimal Progress Tracker"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
