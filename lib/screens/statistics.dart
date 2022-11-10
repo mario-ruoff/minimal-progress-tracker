@@ -1,5 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'dart:io';
 
 class Statistics extends StatefulWidget {
   const Statistics(
@@ -25,6 +28,13 @@ class _StatisticsState extends State<Statistics> {
   final double maxY = 6;
   final int minDays = 7;
   final int minValueScale = 5;
+  final String locale = Platform.localeName;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting(locale);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +91,8 @@ class _StatisticsState extends State<Statistics> {
       firstDay = widget.currentDate.subtract(Duration(days: minDays));
       daySpan = minDays;
     }
+    // Add 1 day to dayspan to display last day
+    daySpan += 1;
 
     return LineChartData(
       gridData: FlGridData(
@@ -183,8 +195,7 @@ class _StatisticsState extends State<Statistics> {
     // Add all values from the history
     valueHistory.forEach((key, value) {
       int daysToFirst = key.difference(firstDay).inDays;
-      // Leave 1 spot free for last day value (... - 1)
-      spots.add(FlSpot(daysToFirst.toDouble() - 1, value.toDouble()));
+      spots.add(FlSpot(daysToFirst.toDouble(), value.toDouble()));
       // Save previous value
       previousYValue = value;
     });
@@ -202,19 +213,20 @@ class _StatisticsState extends State<Statistics> {
       fontSize: 16,
     );
     Widget text;
-    switch (value.toInt()) {
-      case 2:
-        text = const Text('MAR', style: style);
-        break;
-      case 5:
-        text = const Text('JUN', style: style);
-        break;
-      case 8:
-        text = const Text('SEP', style: style);
-        break;
-      default:
-        text = const Text('', style: style);
-        break;
+    int intValue = value.toInt();
+    DateTime valueDate = widget.currentDate
+        .subtract(Duration(days: meta.max.toInt() - intValue - 1));
+
+    if (intValue == (meta.max / 3 - meta.max / 6).toInt() ||
+        intValue == (meta.max / 3 * 2 - meta.max / 6).toInt() ||
+        intValue == (meta.max - meta.max / 6).toInt()) {
+      if (meta.max > 500) {
+        text = Text(DateFormat.Md(locale).format(valueDate), style: style);
+      } else {
+        text = Text(DateFormat.yM(locale).format(valueDate), style: style);
+      }
+    } else {
+      return Container();
     }
 
     return SideTitleWidget(
