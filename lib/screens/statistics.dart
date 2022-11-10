@@ -135,8 +135,10 @@ class _StatisticsState extends State<Statistics> {
           isStrokeCapRound: true,
           isStrokeJoinRound: true,
           isStepLineChart: true,
+          lineChartStepData: LineChartStepData(
+              stepDirection: LineChartStepData.stepDirectionForward),
           dotData: FlDotData(
-            show: false,
+            show: true,
           ),
           belowBarData: BarAreaData(
             show: true,
@@ -148,6 +150,17 @@ class _StatisticsState extends State<Statistics> {
           ),
         ),
       ],
+      lineTouchData: LineTouchData(
+        touchTooltipData: LineTouchTooltipData(
+          getTooltipItems: (touchedSpots) => touchedSpots
+              .map((touchedSpot) => LineTooltipItem(
+                  getRealValueFromGraph(touchedSpot.y, valueHistory).toString(),
+                  const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  )))
+              .toList(),
+        ),
+      ),
     );
   }
 
@@ -155,36 +168,28 @@ class _StatisticsState extends State<Statistics> {
     List<FlSpot> spots = [];
     DateTime firstDay = valueHistory.keys.first;
     int daySpan = widget.currentDate.difference(firstDay).inDays;
+    double? previousYValue;
+
     // If too few days, expand day span
     if (daySpan < minDays) {
       firstDay = widget.currentDate.subtract(Duration(days: minDays));
       daySpan = minDays;
     }
     int maxHistoryValue = getMaxValue(valueHistory);
-    // If max value too small, expand max value
-    if (maxHistoryValue < minValueScale) {
-      maxHistoryValue = minValueScale;
-    }
+
     // Add all values from the history
     valueHistory.forEach((key, value) {
       int daysToFirst = key.difference(firstDay).inDays;
-      double xValue = daysToFirst / daySpan * maxX;
+      // Add 1 to dayspan to fit last value in diagram
+      double xValue = daysToFirst / (daySpan + 1) * maxX;
       double yValue = value / maxHistoryValue * maxY;
       spots.add(FlSpot(xValue, yValue));
       // Save previous value
-      // previousYValue = yValue;
+      previousYValue = yValue;
     });
+    // Add last horizontal value line to current date
+    if (previousYValue != null) spots.add(FlSpot(maxX, previousYValue!));
     return spots;
-  }
-
-  int getMaxValue(Map<DateTime, int> valueHistory) {
-    int maxValue = 0;
-    valueHistory.forEach((key, value) {
-      if (value > maxValue) {
-        maxValue = value;
-      }
-    });
-    return maxValue;
   }
 
   Widget bottomTitleWidgets(double value, TitleMeta meta) {
@@ -224,18 +229,40 @@ class _StatisticsState extends State<Statistics> {
     String text;
     switch (value.toInt()) {
       case 1:
-        text = '10';
+        text = value.round().toString();
         break;
       case 3:
-        text = '30';
+        text = value.round().toString();
         break;
       case 5:
-        text = '50';
+        text = value.round().toString();
         break;
       default:
         return Container();
     }
 
-    return Text(text, style: style, textAlign: TextAlign.left);
+    return Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Text(text, style: style, textAlign: TextAlign.right));
+  }
+
+  int getMaxValue(Map<DateTime, int> valueHistory) {
+    int maxValue = 0;
+    valueHistory.forEach((key, value) {
+      if (value > maxValue) {
+        maxValue = value;
+      }
+    });
+    // If max value too small, expand max value
+    if (maxValue < minValueScale) {
+      maxValue = minValueScale;
+    }
+    return maxValue;
+  }
+
+  int getRealValueFromGraph(
+      double graphValue, Map<DateTime, int> valueHistory) {
+    int maxHistoryValue = getMaxValue(valueHistory);
+    return (graphValue / maxY * maxHistoryValue).round();
   }
 }
