@@ -8,14 +8,14 @@ class ExerciseList extends StatefulWidget {
       required this.names,
       required this.descriptions,
       required this.valueHistories,
-      required this.removeExercise,
+      required this.confirmRemoveDialog,
       required this.updateExercise});
 
   final bool editMode;
   final List<String> names;
   final List<String> descriptions;
   final List<Map<DateTime, int>> valueHistories;
-  final Function(int) removeExercise;
+  final Function(int) confirmRemoveDialog;
   final Function(int, int) updateExercise;
 
   @override
@@ -50,7 +50,7 @@ class _ExerciseListState extends State<ExerciseList> {
                           onPressed: widget.editMode
                               ? () {
                                   setState(() {
-                                    widget.removeExercise(index);
+                                    widget.confirmRemoveDialog(index);
                                   });
                                 }
                               : null,

@@ -17,7 +17,7 @@ class ProgressTracker extends StatelessWidget {
       title: 'Minimal Progress Tracker',
       theme: ThemeData(
         brightness: Brightness.light,
-        primarySwatch: Colors.blueGrey,
+        primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
@@ -204,6 +204,35 @@ class _MainPageState extends State<MainPage> {
         });
   }
 
+  Future<void> _confirmRemoveDialog(index) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(builder: ((context, setState) {
+            return AlertDialog(
+              title: const Text('Delete exercise'),
+              content: const Text(
+                  'Are you sure you want to delete this exercise? Your statistics will also be lost.'),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                TextButton(
+                  onPressed: () {
+                    _removeExercise(index);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Delete'),
+                ),
+              ],
+            );
+          }));
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -242,7 +271,7 @@ class _MainPageState extends State<MainPage> {
                   names: _names,
                   descriptions: _descriptions,
                   valueHistories: _valueHistories,
-                  removeExercise: _removeExercise,
+                  confirmRemoveDialog: _confirmRemoveDialog,
                   updateExercise: _updateExercise),
               Statistics(
                   names: _names,

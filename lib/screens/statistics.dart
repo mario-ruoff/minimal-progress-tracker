@@ -50,16 +50,15 @@ class _StatisticsState extends State<Statistics> {
                     aspectRatio: 2.0,
                     child: DecoratedBox(
                       decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(12),
-                        ),
-                        color: Color(0xff232d37),
-                      ),
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(12),
+                          ),
+                          color: Color(0xff232d37)),
                       child: Padding(
                         padding: const EdgeInsets.only(
                           right: 18,
                           left: 12,
-                          top: 38,
+                          top: 44,
                           bottom: 12,
                         ),
                         child:
@@ -69,11 +68,12 @@ class _StatisticsState extends State<Statistics> {
                   ),
                   Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                          horizontal: 18, vertical: 12),
                       child: Text(
                         widget.names[index],
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
+                          color: Colors.grey[400],
                         ),
                       )),
                 ],
@@ -217,9 +217,9 @@ class _StatisticsState extends State<Statistics> {
     DateTime valueDate = widget.currentDate
         .subtract(Duration(days: meta.max.toInt() - intValue - 1));
 
-    if (intValue == (meta.max / 3 - meta.max / 6).toInt() ||
-        intValue == (meta.max / 3 * 2 - meta.max / 6).toInt() ||
-        intValue == (meta.max - meta.max / 6).toInt()) {
+    if (intValue == (meta.max / 3 - meta.max / 6).round() ||
+        intValue == (meta.max / 3 * 2 - meta.max / 6).round() ||
+        intValue == (meta.max - meta.max / 6).round()) {
       if (meta.max < 500) {
         text = Text(DateFormat.Md(locale).format(valueDate), style: style);
       } else {
