@@ -60,22 +60,22 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      // _names = ["Pushups", "Dips", "Pullups", "Squats"];
-      // _descriptions = ["Raised", "Medium bar", "High bar", ""];
-      // _valueHistories = getHistoriesMapList([
-      //   '{"2022-10-29 00:00:00.000":8, "2022-11-04 00:00:00.000":9, "2022-11-10 00:00:00.000":8, "2022-11-11 00:00:00.000":10}',
-      //   '{"2022-10-29 00:00:00.000":2, "2022-10-30 00:00:00.000":2, "2022-10-31 00:00:00.000":3, "2022-11-01 00:00:00.000":4, "2022-11-05 00:00:00.000":4, "2022-11-06 00:00:00.000":5, "2022-11-08 00:00:00.000":6, "2022-11-09 00:00:00.000":7}',
-      //   '{"2022-10-21 00:00:00.000":4, "2022-10-22 00:00:00.000":4, "2022-10-24 00:00:00.000":5, "2022-10-25 00:00:00.000":6}',
-      //   '{"2022-11-05 00:00:00.000":11, "2022-10-22 00:00:00.000":12, "2022-11-05 00:00:00.000":14}'
-      // ]);
-      // prefs.setStringList('names', _names);
-      // prefs.setStringList('descriptions', _descriptions);
-      // prefs.setStringList(
-      //     'valueHistories', getHistoriesStringList(_valueHistories));
-      _names = prefs.getStringList('names') ?? [];
-      _descriptions = prefs.getStringList('descriptions') ?? [];
-      _valueHistories =
-          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+      _names = ["Pushups", "Dips", "Pullups", "Squats"];
+      _descriptions = ["Raised", "Medium bar", "High bar", ""];
+      _valueHistories = getHistoriesMapList([
+        '{"2022-10-29 00:00:00.000":8, "2022-11-04 00:00:00.000":9, "2022-11-10 00:00:00.000":8, "2022-11-11 00:00:00.000":10}',
+        '{"2022-10-29 00:00:00.000":2, "2022-10-30 00:00:00.000":2, "2022-10-31 00:00:00.000":3, "2022-11-01 00:00:00.000":4, "2022-11-05 00:00:00.000":4, "2022-11-06 00:00:00.000":5, "2022-11-08 00:00:00.000":6, "2022-11-09 00:00:00.000":7}',
+        '{"2022-10-21 00:00:00.000":4, "2022-10-22 00:00:00.000":4, "2022-10-24 00:00:00.000":5, "2022-10-25 00:00:00.000":6}',
+        '{"2022-11-05 00:00:00.000":11, "2022-10-22 00:00:00.000":12, "2022-11-05 00:00:00.000":14}'
+      ]);
+      prefs.setStringList('names', _names);
+      prefs.setStringList('descriptions', _descriptions);
+      prefs.setStringList(
+          'valueHistories', getHistoriesStringList(_valueHistories));
+      // _names = prefs.getStringList('names') ?? [];
+      // _descriptions = prefs.getStringList('descriptions') ?? [];
+      // _valueHistories =
+      //     getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
     });
   }
 
@@ -119,6 +119,29 @@ class _MainPageState extends State<MainPage> {
       _valueHistories =
           getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
       _valueHistories[index][getCurrentDate()] = newValue;
+      prefs.setStringList(
+          'valueHistories', getHistoriesStringList(_valueHistories));
+    });
+  }
+
+  Future<void> _reorderExercise(oldIndex, newIndex) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _names = prefs.getStringList('names') ?? [];
+      _descriptions = prefs.getStringList('descriptions') ?? [];
+      _valueHistories =
+          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final nameItem = _names.removeAt(oldIndex);
+      _names.insert(newIndex, nameItem);
+      final descriptionItem = _descriptions.removeAt(oldIndex);
+      _descriptions.insert(newIndex, descriptionItem);
+      final valueItem = _valueHistories.removeAt(oldIndex);
+      _valueHistories.insert(newIndex, valueItem);
+      prefs.setStringList('names', _names);
+      prefs.setStringList('descriptions', _descriptions);
       prefs.setStringList(
           'valueHistories', getHistoriesStringList(_valueHistories));
     });
@@ -279,7 +302,8 @@ class _MainPageState extends State<MainPage> {
                   descriptions: _descriptions,
                   valueHistories: _valueHistories,
                   confirmRemoveDialog: _confirmRemoveDialog,
-                  updateExercise: _updateExercise),
+                  updateExercise: _updateExercise,
+                  reorderExercise: _reorderExercise),
               Statistics(
                   names: _names,
                   valueHistories: _valueHistories,

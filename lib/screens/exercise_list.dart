@@ -9,7 +9,8 @@ class ExerciseList extends StatefulWidget {
       required this.descriptions,
       required this.valueHistories,
       required this.confirmRemoveDialog,
-      required this.updateExercise});
+      required this.updateExercise,
+      required this.reorderExercise});
 
   final bool editMode;
   final List<String> names;
@@ -17,6 +18,7 @@ class ExerciseList extends StatefulWidget {
   final List<Map<DateTime, int>> valueHistories;
   final Function(int) confirmRemoveDialog;
   final Function(int, int) updateExercise;
+  final Function(int, int) reorderExercise;
 
   @override
   State<ExerciseList> createState() => _ExerciseListState();
@@ -84,19 +86,7 @@ class _ExerciseListState extends State<ExerciseList> {
                       ]),
               ));
         },
-        onReorder: (oldIndex, newIndex) {
-          setState(() {
-            if (newIndex > oldIndex) {
-              newIndex -= 1;
-            }
-            final nameItem = widget.names.removeAt(oldIndex);
-            widget.names.insert(newIndex, nameItem);
-            final descriptionItem = widget.descriptions.removeAt(oldIndex);
-            widget.descriptions.insert(newIndex, descriptionItem);
-            final valueItem = widget.valueHistories.removeAt(oldIndex);
-            widget.valueHistories.insert(newIndex, valueItem);
-          });
-        },
+        onReorder: widget.reorderExercise,
         buildDefaultDragHandles: false);
   }
 }
