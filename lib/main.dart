@@ -60,84 +60,72 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      _names = ["Pushups", "Dips", "Pullups", "Squats"];
-      _descriptions = ["Raised", "Medium bar", "High bar", ""];
-      _valueHistories = getHistoriesMapList([
-        '{"2022-10-29 00:00:00.000":8, "2022-11-04 00:00:00.000":9, "2022-11-10 00:00:00.000":8, "2022-11-11 00:00:00.000":77}',
-        '{"2022-10-29 00:00:00.000":2, "2022-10-30 00:00:00.000":2, "2022-10-31 00:00:00.000":3, "2022-11-01 00:00:00.000":4, "2022-11-05 00:00:00.000":4, "2022-11-06 00:00:00.000":5, "2022-11-08 00:00:00.000":6, "2022-11-09 00:00:00.000":7}',
-        '{"2022-10-21 00:00:00.000":4, "2022-10-22 00:00:00.000":4, "2022-10-24 00:00:00.000":5, "2022-10-25 00:00:00.000":6}',
-        '{"2022-10-05 00:00:00.000":11, "2022-10-22 00:00:00.000":12, "2022-10-24 00:00:00.000":10}'
-      ]);
-      prefs.setStringList('names', _names);
-      prefs.setStringList('descriptions', _descriptions);
-      prefs.setStringList(
-          'valueHistories', getHistoriesStringList(_valueHistories));
-      // _names = prefs.getStringList('names') ?? [];
-      // _descriptions = prefs.getStringList('descriptions') ?? [];
-      // _valueHistories =
-      //     getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
-    });
-  }
-
-  Future<void> _addExercise() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
+      // _names = ["Pushups", "Dips", "Pullups", "Squats"];
+      // _descriptions = ["Raised", "Medium bar", "High bar", ""];
+      // _valueHistories = getHistoriesMapList([
+      //   '{"2022-10-29 00:00:00.000":8, "2022-11-04 00:00:00.000":9, "2022-11-10 00:00:00.000":8, "2022-11-11 00:00:00.000":77}',
+      //   '{"2022-10-29 00:00:00.000":2, "2022-10-30 00:00:00.000":2, "2022-10-31 00:00:00.000":3, "2022-11-01 00:00:00.000":4, "2022-11-05 00:00:00.000":4, "2022-11-06 00:00:00.000":5, "2022-11-08 00:00:00.000":6, "2022-11-09 00:00:00.000":7}',
+      //   '{"2022-10-21 00:00:00.000":4, "2022-10-22 00:00:00.000":4, "2022-10-24 00:00:00.000":5, "2022-10-25 00:00:00.000":6}',
+      //   '{"2022-10-05 00:00:00.000":11, "2022-10-22 00:00:00.000":12, "2022-10-24 00:00:00.000":10}'
+      // ]);
+      // prefs.setStringList('names', _names);
+      // prefs.setStringList('descriptions', _descriptions);
+      // prefs.setStringList(
+      //     'valueHistories', getHistoriesStringList(_valueHistories));
       _names = prefs.getStringList('names') ?? [];
       _descriptions = prefs.getStringList('descriptions') ?? [];
       _valueHistories =
           getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+    });
+  }
+
+  Future<void> _updatePreferences(Function changePreferences) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      // Get the data from shared preferences
+      _names = prefs.getStringList('names') ?? [];
+      _descriptions = prefs.getStringList('descriptions') ?? [];
+      _valueHistories =
+          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+
+      // Change data
+      changePreferences();
+
+      // Save the data to shared preferences
+      prefs.setStringList('names', _names);
+      prefs.setStringList('descriptions', _descriptions);
+      prefs.setStringList(
+          'valueHistories', getHistoriesStringList(_valueHistories));
+    });
+  }
+
+  void _addExercise() {
+    _updatePreferences(() {
       _names.add(_exerciseName);
       _descriptions.add(_exerciseDescription);
       _valueHistories.add({getCurrentDate(): 0});
-      prefs.setStringList('names', _names);
-      prefs.setStringList('descriptions', _descriptions);
-      prefs.setStringList(
-          'valueHistories', getHistoriesStringList(_valueHistories));
     });
   }
 
-  Future<void> _removeExercise(index) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _names = prefs.getStringList('names') ?? [];
-      _descriptions = prefs.getStringList('descriptions') ?? [];
-      _valueHistories =
-          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+  void _removeExercise(index) {
+    _updatePreferences(() {
       _names.removeAt(index);
       _descriptions.removeAt(index);
       _valueHistories.removeAt(index);
-      prefs.setStringList('names', _names);
-      prefs.setStringList('descriptions', _descriptions);
-      prefs.setStringList(
-          'valueHistories', getHistoriesStringList(_valueHistories));
     });
   }
 
-  Future<void> _updateExercise(index, newName, newDescription, newValue) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _names = prefs.getStringList('names') ?? [];
-      _descriptions = prefs.getStringList('descriptions') ?? [];
-      _valueHistories =
-          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+  void _updateExercise(index, newName, newDescription, newValue) {
+    _updatePreferences(() {
       if (_names[index] != newName) _names[index] = newName;
       if (_descriptions[index] != newDescription)
         _descriptions[index] = newDescription;
       if (newValue != null) _valueHistories[index][getCurrentDate()] = newValue;
-      prefs.setStringList('names', _names);
-      prefs.setStringList('descriptions', _descriptions);
-      prefs.setStringList(
-          'valueHistories', getHistoriesStringList(_valueHistories));
     });
   }
 
-  Future<void> _reorderExercise(oldIndex, newIndex) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _names = prefs.getStringList('names') ?? [];
-      _descriptions = prefs.getStringList('descriptions') ?? [];
-      _valueHistories =
-          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+  void _reorderExercise(oldIndex, newIndex) {
+    _updatePreferences(() {
       if (newIndex > oldIndex) {
         newIndex -= 1;
       }
@@ -147,10 +135,6 @@ class _MainPageState extends State<MainPage> {
       _descriptions.insert(newIndex, descriptionItem);
       final valueItem = _valueHistories.removeAt(oldIndex);
       _valueHistories.insert(newIndex, valueItem);
-      prefs.setStringList('names', _names);
-      prefs.setStringList('descriptions', _descriptions);
-      prefs.setStringList(
-          'valueHistories', getHistoriesStringList(_valueHistories));
     });
   }
 
@@ -324,7 +308,7 @@ class _MainPageState extends State<MainPage> {
                   valueHistories: _valueHistories,
                   currentDate: getCurrentDate()),
             ][currentPageIndex],
-      floatingActionButton: !_editMode && currentPageIndex == 0
+      floatingActionButton: !_editMode
           ? FloatingActionButton(
               onPressed: () {
                 _exerciseDialog(context, 0, '', '', true);
