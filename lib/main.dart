@@ -60,22 +60,22 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      // _names = ["Pushups", "Dips", "Pullups", "Squats"];
-      // _descriptions = ["Raised", "Medium bar", "High bar", ""];
-      // _valueHistories = getHistoriesMapList([
-      //   '{"2022-10-29 00:00:00.000":8, "2022-11-04 00:00:00.000":9, "2022-11-10 00:00:00.000":8, "2022-11-11 00:00:00.000":10}',
-      //   '{"2022-10-29 00:00:00.000":2, "2022-10-30 00:00:00.000":2, "2022-10-31 00:00:00.000":3, "2022-11-01 00:00:00.000":4, "2022-11-05 00:00:00.000":4, "2022-11-06 00:00:00.000":5, "2022-11-08 00:00:00.000":6, "2022-11-09 00:00:00.000":7}',
-      //   '{"2022-10-21 00:00:00.000":4, "2022-10-22 00:00:00.000":4, "2022-10-24 00:00:00.000":5, "2022-10-25 00:00:00.000":6}',
-      //   '{"2022-11-05 00:00:00.000":11, "2022-10-22 00:00:00.000":12, "2022-11-05 00:00:00.000":14}'
-      // ]);
-      // prefs.setStringList('names', _names);
-      // prefs.setStringList('descriptions', _descriptions);
-      // prefs.setStringList(
-      //     'valueHistories', getHistoriesStringList(_valueHistories));
-      _names = prefs.getStringList('names') ?? [];
-      _descriptions = prefs.getStringList('descriptions') ?? [];
-      _valueHistories =
-          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+      _names = ["Pushups", "Dips", "Pullups", "Squats"];
+      _descriptions = ["Raised", "Medium bar", "High bar", ""];
+      _valueHistories = getHistoriesMapList([
+        '{"2022-10-29 00:00:00.000":8, "2022-11-04 00:00:00.000":9, "2022-11-10 00:00:00.000":8, "2022-11-11 00:00:00.000":77}',
+        '{"2022-10-29 00:00:00.000":2, "2022-10-30 00:00:00.000":2, "2022-10-31 00:00:00.000":3, "2022-11-01 00:00:00.000":4, "2022-11-05 00:00:00.000":4, "2022-11-06 00:00:00.000":5, "2022-11-08 00:00:00.000":6, "2022-11-09 00:00:00.000":7}',
+        '{"2022-10-21 00:00:00.000":4, "2022-10-22 00:00:00.000":4, "2022-10-24 00:00:00.000":5, "2022-10-25 00:00:00.000":6}',
+        '{"2022-10-05 00:00:00.000":11, "2022-10-22 00:00:00.000":12, "2022-10-24 00:00:00.000":10}'
+      ]);
+      prefs.setStringList('names', _names);
+      prefs.setStringList('descriptions', _descriptions);
+      prefs.setStringList(
+          'valueHistories', getHistoriesStringList(_valueHistories));
+      // _names = prefs.getStringList('names') ?? [];
+      // _descriptions = prefs.getStringList('descriptions') ?? [];
+      // _valueHistories =
+      //     getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
     });
   }
 
@@ -113,12 +113,19 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  Future<void> _updateExercise(index, newValue) async {
+  Future<void> _updateExercise(index, newName, newDescription, newValue) async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
+      _names = prefs.getStringList('names') ?? [];
+      _descriptions = prefs.getStringList('descriptions') ?? [];
       _valueHistories =
           getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
-      _valueHistories[index][getCurrentDate()] = newValue;
+      if (_names[index] != newName) _names[index] = newName;
+      if (_descriptions[index] != newDescription)
+        _descriptions[index] = newDescription;
+      if (newValue != null) _valueHistories[index][getCurrentDate()] = newValue;
+      prefs.setStringList('names', _names);
+      prefs.setStringList('descriptions', _descriptions);
       prefs.setStringList(
           'valueHistories', getHistoriesStringList(_valueHistories));
     });
@@ -177,22 +184,25 @@ class _MainPageState extends State<MainPage> {
         DateTime.now().year, DateTime.now().month, DateTime.now().day);
   }
 
-  Future<void> _newExerciseDialog(BuildContext context) async {
+  Future<void> _exerciseDialog(context, index, name, description, isNew) async {
     setState(() {
-      _exerciseName = '';
-      _exerciseDescription = '';
+      _exerciseName = name;
+      _exerciseDescription = description;
     });
     return showDialog(
         context: context,
         builder: (context) {
           return StatefulBuilder(builder: ((context, setState) {
             return AlertDialog(
-              title: const Text('Add new exercise'),
+              title: isNew
+                  ? const Text('Add new exercise')
+                  : const Text('Edit exercise'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(
+                  TextFormField(
                     autofocus: true,
+                    initialValue: name,
                     decoration: const InputDecoration(
                         labelText: 'Exercise name', hintText: 'e.g. Pushups'),
                     onChanged: (value) {
@@ -201,7 +211,8 @@ class _MainPageState extends State<MainPage> {
                       });
                     },
                   ),
-                  TextField(
+                  TextFormField(
+                    initialValue: description,
                     decoration: const InputDecoration(
                         labelText: 'Description', hintText: 'e.g. Raised bar'),
                     onChanged: (value) {
@@ -222,11 +233,14 @@ class _MainPageState extends State<MainPage> {
                 TextButton(
                   onPressed: _exerciseName.isNotEmpty
                       ? () {
-                          _addExercise();
+                          isNew
+                              ? _addExercise()
+                              : _updateExercise(index, _exerciseName,
+                                  _exerciseDescription, null);
                           Navigator.pop(context);
                         }
                       : null,
-                  child: const Text('Add'),
+                  child: isNew ? const Text('Add') : const Text('Save'),
                 ),
               ],
             );
@@ -301,6 +315,7 @@ class _MainPageState extends State<MainPage> {
                   names: _names,
                   descriptions: _descriptions,
                   valueHistories: _valueHistories,
+                  exerciseDialog: _exerciseDialog,
                   confirmRemoveDialog: _confirmRemoveDialog,
                   updateExercise: _updateExercise,
                   reorderExercise: _reorderExercise),
@@ -312,7 +327,7 @@ class _MainPageState extends State<MainPage> {
       floatingActionButton: !_editMode && currentPageIndex == 0
           ? FloatingActionButton(
               onPressed: () {
-                _newExerciseDialog(context);
+                _exerciseDialog(context, 0, '', '', true);
               },
               tooltip: 'Add Exercise',
               child: const Icon(Icons.add),

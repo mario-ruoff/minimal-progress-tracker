@@ -8,6 +8,7 @@ class ExerciseList extends StatefulWidget {
       required this.names,
       required this.descriptions,
       required this.valueHistories,
+      required this.exerciseDialog,
       required this.confirmRemoveDialog,
       required this.updateExercise,
       required this.reorderExercise});
@@ -16,8 +17,9 @@ class ExerciseList extends StatefulWidget {
   final List<String> names;
   final List<String> descriptions;
   final List<Map<DateTime, int>> valueHistories;
+  final Function(BuildContext, int, String, String, bool) exerciseDialog;
   final Function(int) confirmRemoveDialog;
-  final Function(int, int) updateExercise;
+  final Function(int, String, String, int) updateExercise;
   final Function(int, int) reorderExercise;
 
   @override
@@ -37,7 +39,7 @@ class _ExerciseListState extends State<ExerciseList> {
           final description = widget.descriptions[index];
           final value = widget.valueHistories[index].values.last;
           return Card(
-              key: Key(exercise + random.nextInt(10000).toString()),
+              key: Key('$index'),
               child: ListTile(
                 leading: widget.editMode
                     ? ReorderableDragStartListener(
@@ -48,7 +50,20 @@ class _ExerciseListState extends State<ExerciseList> {
                 trailing: widget.editMode
                     ? Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
                         IconButton(
+                          icon: const Icon(Icons.drive_file_rename_outline),
+                          tooltip: 'Rename exercise',
+                          onPressed: widget.editMode
+                              ? () {
+                                  setState(() {
+                                    widget.exerciseDialog(context, index,
+                                        exercise, description, false);
+                                  });
+                                }
+                              : null,
+                        ),
+                        IconButton(
                           icon: const Icon(Icons.delete),
+                          tooltip: 'Delete exercise',
                           onPressed: widget.editMode
                               ? () {
                                   setState(() {
@@ -64,13 +79,14 @@ class _ExerciseListState extends State<ExerciseList> {
                           onPressed: value <= 0
                               ? null
                               : () {
-                                  widget.updateExercise(index, value - 1);
+                                  widget.updateExercise(
+                                      index, exercise, description, value - 1);
                                 },
                         ),
                         SizedBox(
                           width: 22,
                           child: Text(
-                            "$value",
+                            value.toString(),
                             style: const TextStyle(fontSize: 18),
                             textAlign: TextAlign.center,
                           ),
@@ -80,7 +96,8 @@ class _ExerciseListState extends State<ExerciseList> {
                           onPressed: value >= 100
                               ? null
                               : () {
-                                  widget.updateExercise(index, value + 1);
+                                  widget.updateExercise(
+                                      index, exercise, description, value + 1);
                                 },
                         ),
                       ]),

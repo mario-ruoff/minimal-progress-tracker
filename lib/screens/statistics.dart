@@ -24,10 +24,8 @@ class _StatisticsState extends State<Statistics> {
     const Color(0xff23b6e6),
     const Color(0xff02d39a),
   ];
-  final double maxX = 11;
-  final double maxY = 6;
   final int minDays = 7;
-  final int minValueScale = 5;
+  final int minValueScale = 10;
   final String locale = Platform.localeName;
 
   @override
