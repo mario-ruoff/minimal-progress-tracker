@@ -21,13 +21,13 @@ Minimal Progress Tracker is a simple workout tracker without ads, in-app purchas
 
 ## Screenshots
 <p align="center">
-  <img alt="Logo" src="assets/playstore/1-bright.jpg" width="20%" />
+  <img alt="Logo" src="assets/playstore/1-bright.png" width="20%" />
   &nbsp;&nbsp;
-  <img alt="Logo" src="assets/playstore/1-dark.jpg" width="20%" />
+  <img alt="Logo" src="assets/playstore/1-dark.png" width="20%" />
   &nbsp;&nbsp;
-  <img alt="Logo" src="assets/playstore/2-bright.jpg" width="20%" />
+  <img alt="Logo" src="assets/playstore/2-bright.png" width="20%" />
   &nbsp;&nbsp;
-  <img alt="Logo" src="assets/playstore/2-dark.jpg" width="20%" />
+  <img alt="Logo" src="assets/playstore/2-dark.png" width="20%" />
 </p>
 
 ## Install
