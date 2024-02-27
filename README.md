@@ -55,4 +55,4 @@ For questions, suggestions, or collaborations, feel free to contact the project 
 Mario Ruoff
 
 - GitHub: [@mario-ruoff](https://github.com/mario-ruoff)
-- Email: [mario-ruoff@proton.me](mailto:mario-ruoff@proton.me)
+- Email: [info@mario-ruoff.x10.mx](mailto:info@mario-ruoff.x10.mx)
