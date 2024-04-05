@@ -16,14 +16,10 @@ class ProgressTracker extends StatelessWidget {
     return MaterialApp(
       title: 'Minimal Progress Tracker',
       theme: ThemeData(
-        brightness: Brightness.light,
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.lightBlue,
-        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blueGrey,
+          brightness: Brightness.dark,
+        ),
       ),
       home: const MainPage(
         titles: ["Exercise List", "Progress Statistics"],
