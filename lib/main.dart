@@ -114,8 +114,9 @@ class _MainPageState extends State<MainPage> {
   void _updateExercise(index, newName, newDescription, newValue) {
     _updatePreferences(() {
       if (_names[index] != newName) _names[index] = newName;
-      if (_descriptions[index] != newDescription)
+      if (_descriptions[index] != newDescription) {
         _descriptions[index] = newDescription;
+      }
       if (newValue != null) _valueHistories[index][getCurrentDate()] = newValue;
     });
   }

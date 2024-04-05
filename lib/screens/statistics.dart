@@ -2,7 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'dart:io';
+import 'package:universal_io/io.dart';
+import 'dart:math';
 
 class Statistics extends StatefulWidget {
   const Statistics(
@@ -80,10 +81,14 @@ class _StatisticsState extends State<Statistics> {
   }
 
   LineChartData mainData(Map<DateTime, int> valueHistory) {
-    int maxHistoryValue = getMaxValue(valueHistory);
+    int maxHistoryValue = valueHistory.values.reduce(max);
     DateTime firstDay = valueHistory.keys.first;
     int daySpan = widget.currentDate.difference(firstDay).inDays;
 
+    // If max value too small, expand scale
+    if (maxHistoryValue < minValueScale) {
+      maxHistoryValue = minValueScale;
+    }
     // If too few days, expand day span
     if (daySpan < minDays) {
       firstDay = widget.currentDate.subtract(Duration(days: minDays));
@@ -92,31 +97,37 @@ class _StatisticsState extends State<Statistics> {
     // Add 1 day to dayspan to display last day
     daySpan += 1;
 
+    // Calculate grid intervals to avoid cluttering
+    double xInterval = (daySpan > minDays * 2) ? (daySpan / minDays) : 1;
+    double yInterval = (maxHistoryValue > minValueScale * 2)
+        ? maxHistoryValue / minValueScale
+        : 1;
+
     return LineChartData(
       gridData: FlGridData(
         show: true,
         drawVerticalLine: true,
-        horizontalInterval: 1,
-        verticalInterval: 1,
+        horizontalInterval: yInterval,
+        verticalInterval: xInterval,
         getDrawingHorizontalLine: (value) {
-          return FlLine(
-            color: const Color(0xff37434d),
+          return const FlLine(
+            color: Color(0xff37434d),
             strokeWidth: 1,
           );
         },
         getDrawingVerticalLine: (value) {
-          return FlLine(
-            color: const Color(0xff37434d),
+          return const FlLine(
+            color: Color(0xff37434d),
             strokeWidth: 1,
           );
         },
       ),
       titlesData: FlTitlesData(
         show: true,
-        rightTitles: AxisTitles(
+        rightTitles: const AxisTitles(
           sideTitles: SideTitles(showTitles: false),
         ),
-        topTitles: AxisTitles(
+        topTitles: const AxisTitles(
           sideTitles: SideTitles(showTitles: false),
         ),
         bottomTitles: AxisTitles(
@@ -156,9 +167,9 @@ class _StatisticsState extends State<Statistics> {
           isStrokeCapRound: true,
           isStrokeJoinRound: true,
           isStepLineChart: true,
-          lineChartStepData: LineChartStepData(
+          lineChartStepData: const LineChartStepData(
               stepDirection: LineChartStepData.stepDirectionForward),
-          dotData: FlDotData(
+          dotData: const FlDotData(
             show: false,
           ),
           belowBarData: BarAreaData(
@@ -253,19 +264,5 @@ class _StatisticsState extends State<Statistics> {
     return Padding(
         padding: const EdgeInsets.only(right: 12),
         child: Text(text, style: style, textAlign: TextAlign.right));
-  }
-
-  int getMaxValue(Map<DateTime, int> valueHistory) {
-    int maxValue = 0;
-    valueHistory.forEach((key, value) {
-      if (value > maxValue) {
-        maxValue = value;
-      }
-    });
-    // If max value too small, expand max value
-    if (maxValue < minValueScale) {
-      maxValue = minValueScale;
-    }
-    return maxValue;
   }
 }
