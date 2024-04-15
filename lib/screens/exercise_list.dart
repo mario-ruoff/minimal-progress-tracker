@@ -93,7 +93,7 @@ class _ExerciseListState extends State<ExerciseList> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.add),
-                          onPressed: value >= 100
+                          onPressed: value >= 99
                               ? null
                               : () {
                                   widget.updateExercise(
