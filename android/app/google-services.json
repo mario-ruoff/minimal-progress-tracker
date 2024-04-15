@@ -12,7 +12,12 @@
           "package_name": "com.escape99.minimalprogresstracker"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "85649441713-s99pdkt3vl4bnhetovnnie2kcm7e2ooj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDLRW-Cf8Y599LU24fiCPBtTDZyJ4MrhsU"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "85649441713-s99pdkt3vl4bnhetovnnie2kcm7e2ooj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

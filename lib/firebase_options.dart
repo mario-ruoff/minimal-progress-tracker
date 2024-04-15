@@ -65,4 +65,5 @@ class DefaultFirebaseOptions {
     projectId: 'minimal-progress-tracker',
     storageBucket: 'minimal-progress-tracker.appspot.com',
   );
+
 }
