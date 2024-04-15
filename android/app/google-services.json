@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "85649441713",
+    "project_id": "minimal-progress-tracker",
+    "storage_bucket": "minimal-progress-tracker.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:85649441713:android:fdeb6456ae9286bfba7390",
+        "android_client_info": {
+          "package_name": "com.escape99.minimalprogresstracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLRW-Cf8Y599LU24fiCPBtTDZyJ4MrhsU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
