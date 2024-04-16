@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:minimal_progress_tracker/screens/authentication.dart';
 import 'package:minimal_progress_tracker/screens/exercise_list.dart';
 import 'package:minimal_progress_tracker/screens/statistics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 
 class MainPage extends StatefulWidget {
@@ -15,7 +17,6 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   int _currentPageIndex = 0;
   bool _editMode = false;
   List<String> _names = [];
@@ -32,7 +33,7 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
-    await _firestore.collection("users").get().then((event) {
+    await FirebaseFirestore.instance.collection("users").get().then((event) {
       for (var doc in event.docs) {
         print("${doc.id} => ${doc.data()}");
       }
@@ -244,6 +245,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      endDrawer: const Drawer(child: Authentication()),
       appBar: AppBar(
         title: Text(widget.titles[_currentPageIndex]),
         actions: _currentPageIndex != 0
@@ -258,6 +260,18 @@ class _MainPageState extends State<MainPage> {
                     });
                   },
                 ),
+                Builder(
+                    builder: (context) => IconButton(
+                          icon: Icon(FirebaseAuth.instance.currentUser == null
+                              ? Icons.login
+                              : Icons.account_circle),
+                          tooltip: FirebaseAuth.instance.currentUser == null
+                              ? 'Sign in'
+                              : 'Profile',
+                          onPressed: () => {
+                            Scaffold.of(context).openEndDrawer(),
+                          },
+                        )),
               ],
       ),
       body: _valueHistories.isEmpty
