@@ -7,28 +7,41 @@ class Authentication extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      initialRoute:
-          FirebaseAuth.instance.currentUser == null ? '/sign-in' : '/profile',
-      routes: {
-        '/sign-in': (context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
           return SignInScreen(
-            actions: [
-              AuthStateChangeAction<SignedIn>((context, state) {
-                Navigator.pushReplacementNamed(context, '/profile');
-              }),
-            ],
+            subtitleBuilder: (context, action) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                    'You can save your progress to the cloud by signing in.'),
+              );
+            },
           );
-        },
-        '/profile': (context) {
-          return ProfileScreen(
-            actions: [
-              SignedOutAction((context) {
-                Navigator.pushReplacementNamed(context, '/sign-in');
-              }),
-            ],
-          );
-        },
+        }
+
+        return ProfileScreen(
+          appBar: AppBar(
+            title: const Text('User Profile'),
+          ),
+          actions: [
+            SignedOutAction((context) {
+              Navigator.of(context).pop();
+            })
+          ],
+          children: [
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.all(2),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Image.asset('flutterfire_300x.png'),
+              ),
+            ),
+          ],
+        );
       },
     );
   }

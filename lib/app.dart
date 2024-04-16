@@ -245,7 +245,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      endDrawer: const Drawer(child: Authentication()),
+      endDrawer: const Drawer(width: 350, child: Authentication()),
       appBar: AppBar(
         title: Text(widget.titles[_currentPageIndex]),
         actions: _currentPageIndex != 0
@@ -260,18 +260,27 @@ class _MainPageState extends State<MainPage> {
                     });
                   },
                 ),
-                Builder(
-                    builder: (context) => IconButton(
-                          icon: Icon(FirebaseAuth.instance.currentUser == null
-                              ? Icons.login
-                              : Icons.account_circle),
-                          tooltip: FirebaseAuth.instance.currentUser == null
-                              ? 'Sign in'
-                              : 'Profile',
+                StreamBuilder<User?>(
+                    stream: FirebaseAuth.instance.authStateChanges(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return IconButton(
+                          icon: const Icon(Icons.login),
+                          tooltip: 'Sign in',
                           onPressed: () => {
                             Scaffold.of(context).openEndDrawer(),
                           },
-                        )),
+                        );
+                      } else {
+                        return IconButton(
+                          icon: const Icon(Icons.account_circle),
+                          tooltip: 'Profile',
+                          onPressed: () => {
+                            Scaffold.of(context).openEndDrawer(),
+                          },
+                        );
+                      }
+                    }),
               ],
       ),
       body: _valueHistories.isEmpty
