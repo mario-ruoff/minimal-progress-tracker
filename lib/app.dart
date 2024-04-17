@@ -263,23 +263,19 @@ class _MainPageState extends State<MainPage> {
                 StreamBuilder<User?>(
                     stream: FirebaseAuth.instance.authStateChanges(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return IconButton(
-                          icon: const Icon(Icons.login),
-                          tooltip: 'Sign in',
-                          onPressed: () => {
-                            Scaffold.of(context).openEndDrawer(),
-                          },
-                        );
-                      } else {
-                        return IconButton(
-                          icon: const Icon(Icons.account_circle),
-                          tooltip: 'Profile',
-                          onPressed: () => {
-                            Scaffold.of(context).openEndDrawer(),
-                          },
-                        );
-                      }
+                      return IconButton(
+                        icon: !snapshot.hasData
+                            ? const Icon(Icons.account_circle)
+                            : CircleAvatar(
+                                backgroundImage:
+                                    NetworkImage(snapshot.data!.photoURL ?? ''),
+                                backgroundColor: Colors.transparent,
+                              ),
+                        tooltip: 'Profile',
+                        onPressed: () => {
+                          Scaffold.of(context).openEndDrawer(),
+                        },
+                      );
                     }),
               ],
       ),

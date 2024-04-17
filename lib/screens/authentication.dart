@@ -12,34 +12,43 @@ class Authentication extends StatelessWidget {
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return SignInScreen(
-            subtitleBuilder: (context, action) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                    'You can save your progress to the cloud by signing in.'),
+            headerBuilder: (context, constraints, shrinkOffset) {
+              return Padding(
+                padding: const EdgeInsets.only(top: 10, left: 16, right: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'User Profile',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                        'You can securely save your training progress to the cloud by signing in.',
+                        style: Theme.of(context).textTheme.bodyLarge),
+                  ],
+                ),
               );
             },
           );
         }
-
         return ProfileScreen(
           appBar: AppBar(
-            title: const Text('User Profile'),
+            title: Text('User Profile',
+                style: Theme.of(context).textTheme.headlineMedium),
           ),
           actions: [
             SignedOutAction((context) {
               Navigator.of(context).pop();
             })
           ],
+          providers: const [],
           children: [
+            const SizedBox(height: 8),
             const Divider(),
-            Padding(
-              padding: const EdgeInsets.all(2),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Image.asset('flutterfire_300x.png'),
-              ),
-            ),
+            Text('Your data is securely stored in the cloud.',
+                style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 8),
           ],
         );
       },
