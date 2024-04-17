@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:minimal_progress_tracker/screens/authentication.dart';
+import 'package:minimal_progress_tracker/screens/user_profile.dart';
 import 'package:minimal_progress_tracker/screens/exercise_list.dart';
 import 'package:minimal_progress_tracker/screens/statistics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -245,39 +245,38 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      endDrawer: const Drawer(width: 350, child: Authentication()),
+      endDrawer: const Drawer(width: 350, child: UserProfile()),
       appBar: AppBar(
         title: Text(widget.titles[_currentPageIndex]),
-        actions: _currentPageIndex != 0
-            ? null
-            : [
-                IconButton(
-                  icon: Icon(_editMode ? Icons.done : Icons.edit),
-                  tooltip: 'Edit exercises',
-                  onPressed: () {
-                    setState(() {
-                      _editMode = !_editMode;
-                    });
+        actions: [
+          if (_currentPageIndex == 0)
+            IconButton(
+              icon: Icon(_editMode ? Icons.done : Icons.edit),
+              tooltip: 'Edit exercises',
+              onPressed: () {
+                setState(() {
+                  _editMode = !_editMode;
+                });
+              },
+            ),
+          StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                return IconButton(
+                  icon: !snapshot.hasData
+                      ? const Icon(Icons.account_circle)
+                      : CircleAvatar(
+                          backgroundImage:
+                              NetworkImage(snapshot.data!.photoURL ?? ''),
+                          backgroundColor: Colors.transparent,
+                        ),
+                  tooltip: 'Profile',
+                  onPressed: () => {
+                    Scaffold.of(context).openEndDrawer(),
                   },
-                ),
-                StreamBuilder<User?>(
-                    stream: FirebaseAuth.instance.authStateChanges(),
-                    builder: (context, snapshot) {
-                      return IconButton(
-                        icon: !snapshot.hasData
-                            ? const Icon(Icons.account_circle)
-                            : CircleAvatar(
-                                backgroundImage:
-                                    NetworkImage(snapshot.data!.photoURL ?? ''),
-                                backgroundColor: Colors.transparent,
-                              ),
-                        tooltip: 'Profile',
-                        onPressed: () => {
-                          Scaffold.of(context).openEndDrawer(),
-                        },
-                      );
-                    }),
-              ],
+                );
+              }),
+        ],
       ),
       body: _valueHistories.isEmpty
           ? Container(
@@ -307,7 +306,7 @@ class _MainPageState extends State<MainPage> {
                   valueHistories: _valueHistories,
                   currentDate: getCurrentDate()),
             ][_currentPageIndex],
-      floatingActionButton: !_editMode
+      floatingActionButton: !_editMode && _currentPageIndex == 0
           ? FloatingActionButton(
               onPressed: () {
                 _exerciseDialog(context, 0, '', '', true);
