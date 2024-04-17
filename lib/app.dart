@@ -263,14 +263,14 @@ class _MainPageState extends State<MainPage> {
               stream: FirebaseAuth.instance.authStateChanges(),
               builder: (context, snapshot) {
                 return IconButton(
-                  icon: !snapshot.hasData
+                  icon: !snapshot.hasData || snapshot.data!.photoURL == null
                       ? const Icon(Icons.account_circle)
                       : CircleAvatar(
                           backgroundImage:
                               NetworkImage(snapshot.data!.photoURL ?? ''),
                           backgroundColor: Colors.transparent,
                         ),
-                  tooltip: 'Profile',
+                  tooltip: 'User Profile',
                   onPressed: () => {
                     Scaffold.of(context).openEndDrawer(),
                   },
