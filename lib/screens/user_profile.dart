@@ -12,27 +12,37 @@ class UserProfile extends StatelessWidget {
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return SignInScreen(
-            headerBuilder: (context, constraints, shrinkOffset) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 10, left: 16, right: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'User Profile',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                        'You can securely save your training progress to the cloud by signing in.',
-                        style: Theme.of(context).textTheme.bodyLarge),
-                  ],
-                ),
-              );
-            },
-          );
+              showAuthActionSwitch: false,
+              headerBuilder: (context, constraints, shrinkOffset) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 10, left: 16, right: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'User Profile',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                          'You can securely save your training progress to the cloud by signing in.',
+                          style: Theme.of(context).textTheme.bodyLarge),
+                    ],
+                  ),
+                );
+              },
+              footerBuilder: (context, action) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Text(
+                    'By signing in, you agree to our terms and conditions.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+              });
         }
         return ProfileScreen(
+          showDeleteConfirmationDialog: true,
           appBar: AppBar(
             title: Text('User Profile',
                 style: Theme.of(context).textTheme.headlineMedium),
@@ -40,6 +50,9 @@ class UserProfile extends StatelessWidget {
           actions: [
             SignedOutAction((context) {
               Navigator.of(context).pop();
+            }),
+            AccountDeletedAction((context, user) {
+              // TODO: Delete user data in firestore
             })
           ],
           providers: const [],

@@ -32,31 +32,77 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<void> _loadData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await FirebaseFirestore.instance.collection("users").get().then((event) {
-      for (var doc in event.docs) {
-        print("${doc.id} => ${doc.data()}");
-      }
-    });
+    // Load local shared preferences data if no user is signed in
+    if (FirebaseAuth.instance.currentUser == null) {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        // _names = ["Pushups", "Dips", "Pullups", "Squats"];
+        // _descriptions = ["Raised", "Medium bar", "High bar", ""];
+        // _valueHistories = getHistoriesMapList([
+        //   '{"2022-10-29 00:00:00.000":8, "2022-11-04 00:00:00.000":9, "2022-11-10 00:00:00.000":8, "2022-11-11 00:00:00.000":77}',
+        //   '{"2023-10-29 00:00:00.000":2, "2023-10-30 00:00:00.000":2, "2023-10-31 00:00:00.000":3, "2023-11-01 00:00:00.000":4, "2023-11-05 00:00:00.000":4, "2023-11-06 00:00:00.000":5, "2023-11-08 00:00:00.000":6, "2023-11-09 00:00:00.000":7}',
+        //   '{"2023-10-21 00:00:00.000":4, "2023-10-22 00:00:00.000":4, "2023-10-24 00:00:00.000":5, "2023-10-25 00:00:00.000":6}',
+        //   '{"2023-10-05 00:00:00.000":11, "2023-10-22 00:00:00.000":12, "2023-10-24 00:00:00.000":10}'
+        // ]);
+        // prefs.setStringList('names', _names);
+        // prefs.setStringList('descriptions', _descriptions);
+        // prefs.setStringList(
+        //     'valueHistories', getHistoriesStringList(_valueHistories));
+        _names = prefs.getStringList('names') ?? [];
+        _descriptions = prefs.getStringList('descriptions') ?? [];
+        _valueHistories = getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+      });
+    }
+    // Load firestore data if user is signed in
+    else {
+      final authUser = FirebaseAuth.instance.currentUser;
+      final firestoreUser = FirebaseFirestore.instance.collection('users').doc(authUser!.uid);
 
-    setState(() {
-      _names = ["Pushups", "Dips", "Pullups", "Squats"];
-      _descriptions = ["Raised", "Medium bar", "High bar", ""];
-      _valueHistories = getHistoriesMapList([
-        '{"2022-10-29 00:00:00.000":8, "2022-11-04 00:00:00.000":9, "2022-11-10 00:00:00.000":8, "2022-11-11 00:00:00.000":77}',
-        '{"2023-10-29 00:00:00.000":2, "2023-10-30 00:00:00.000":2, "2023-10-31 00:00:00.000":3, "2023-11-01 00:00:00.000":4, "2023-11-05 00:00:00.000":4, "2023-11-06 00:00:00.000":5, "2023-11-08 00:00:00.000":6, "2023-11-09 00:00:00.000":7}',
-        '{"2023-10-21 00:00:00.000":4, "2023-10-22 00:00:00.000":4, "2023-10-24 00:00:00.000":5, "2023-10-25 00:00:00.000":6}',
-        '{"2023-10-05 00:00:00.000":11, "2023-10-22 00:00:00.000":12, "2023-10-24 00:00:00.000":10}'
-      ]);
-      prefs.setStringList('names', _names);
-      prefs.setStringList('descriptions', _descriptions);
-      prefs.setStringList(
-          'valueHistories', getHistoriesStringList(_valueHistories));
-      // _names = prefs.getStringList('names') ?? [];
-      // _descriptions = prefs.getStringList('descriptions') ?? [];
-      // _valueHistories =
-      //     getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
-    });
+      // Check if user already exists in firestore
+      firestoreUser.get().then((DocumentSnapshot user) {
+        // Add new user to firestore
+        if (!user.exists) {
+          firestoreUser.set({});
+        } else {
+          // Get exercise data from firestore
+          firestoreUser
+              .collection('exercises')
+              .get()
+              .then((QuerySnapshot<Map<String, dynamic>> exercisesSnapshot) async {
+            for (DocumentSnapshot<Map<String, dynamic>> exerciseSnapshot in exercisesSnapshot.docs) {
+              final exercise = exerciseSnapshot.data();
+              print(exercise);
+
+              // Get value history data from firestore
+              Map<DateTime, int> historyMap = {};
+              QuerySnapshot<Map<String, dynamic>> historiesSnapshot =
+                  await exerciseSnapshot.reference.collection('valueHistory').orderBy("date").get();
+              for (DocumentSnapshot<Map<String, dynamic>> historySnapshot in historiesSnapshot.docs) {
+                final valueHistory = historySnapshot.data();
+                historyMap[valueHistory?['date'].toDate()] = valueHistory?['amount'];
+              }
+
+              // Add exercise data to local state
+              setState(() {
+                _names.add(exercise?['name']);
+                _descriptions.add(exercise?['description']);
+                _valueHistories.add(historyMap);
+              });
+            }
+          });
+          // firestoreUser.firestore
+          //     .collectionGroup("valueHistory")
+          //     .get()
+          //     .then((QuerySnapshot<Map<String, dynamic>> historySnapshot) {
+          //   for (DocumentSnapshot<Map<String, dynamic>> historySnapshot in historySnapshot.docs) {
+          //     final valueHistory = historySnapshot.data();
+          //     print(historySnapshot.reference.parent.parent!.id);
+          //     print(valueHistory);
+          //   }
+          // });
+        }
+      });
+    }
   }
 
   Future<void> _updatePreferences(Function changePreferences) async {
@@ -65,8 +111,7 @@ class _MainPageState extends State<MainPage> {
       // Get the data from shared preferences
       _names = prefs.getStringList('names') ?? [];
       _descriptions = prefs.getStringList('descriptions') ?? [];
-      _valueHistories =
-          getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+      _valueHistories = getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
 
       // Change data
       changePreferences();
@@ -74,8 +119,7 @@ class _MainPageState extends State<MainPage> {
       // Save the data to shared preferences
       prefs.setStringList('names', _names);
       prefs.setStringList('descriptions', _descriptions);
-      prefs.setStringList(
-          'valueHistories', getHistoriesStringList(_valueHistories));
+      prefs.setStringList('valueHistories', getHistoriesStringList(_valueHistories));
     });
   }
 
@@ -119,8 +163,7 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  List<Map<DateTime, int>> getHistoriesMapList(
-      List<String> historiesStringList) {
+  List<Map<DateTime, int>> getHistoriesMapList(List<String> historiesStringList) {
     List<Map<DateTime, int>> returnList = [];
     for (String historyString in historiesStringList) {
       dynamic historyDict = jsonDecode(historyString);
@@ -133,20 +176,17 @@ class _MainPageState extends State<MainPage> {
     return returnList;
   }
 
-  List<String> getHistoriesStringList(
-      List<Map<DateTime, int>> historiesMapList) {
+  List<String> getHistoriesStringList(List<Map<DateTime, int>> historiesMapList) {
     List<String> returnList = [];
     for (Map<DateTime, int> historyMap in historiesMapList) {
-      String historyString = jsonEncode(
-          historyMap.map((key, value) => MapEntry(key.toString(), value)));
+      String historyString = jsonEncode(historyMap.map((key, value) => MapEntry(key.toString(), value)));
       returnList.add(historyString);
     }
     return returnList;
   }
 
   DateTime getCurrentDate() {
-    return DateTime(
-        DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    return DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   }
 
   Future<void> _exerciseDialog(context, index, name, description, isNew) async {
@@ -159,17 +199,14 @@ class _MainPageState extends State<MainPage> {
         builder: (context) {
           return StatefulBuilder(builder: ((context, setState) {
             return AlertDialog(
-              title: isNew
-                  ? const Text('Add new exercise')
-                  : const Text('Edit exercise'),
+              title: isNew ? const Text('Add new exercise') : const Text('Edit exercise'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextFormField(
                     autofocus: true,
                     initialValue: name,
-                    decoration: const InputDecoration(
-                        labelText: 'Exercise name', hintText: 'e.g. Pushups'),
+                    decoration: const InputDecoration(labelText: 'Exercise name', hintText: 'e.g. Pushups'),
                     onChanged: (value) {
                       setState(() {
                         _exerciseName = value;
@@ -178,8 +215,7 @@ class _MainPageState extends State<MainPage> {
                   ),
                   TextFormField(
                     initialValue: description,
-                    decoration: const InputDecoration(
-                        labelText: 'Description', hintText: 'e.g. Raised bar'),
+                    decoration: const InputDecoration(labelText: 'Description', hintText: 'e.g. Wide Grip'),
                     onChanged: (value) {
                       setState(() {
                         _exerciseDescription = value;
@@ -198,10 +234,7 @@ class _MainPageState extends State<MainPage> {
                 TextButton(
                   onPressed: _exerciseName.isNotEmpty
                       ? () {
-                          isNew
-                              ? _addExercise()
-                              : _updateExercise(index, _exerciseName,
-                                  _exerciseDescription, null);
+                          isNew ? _addExercise() : _updateExercise(index, _exerciseName, _exerciseDescription, null);
                           Navigator.pop(context);
                         }
                       : null,
@@ -220,8 +253,7 @@ class _MainPageState extends State<MainPage> {
           return StatefulBuilder(builder: ((context, setState) {
             return AlertDialog(
               title: const Text('Delete exercise'),
-              content: const Text(
-                  'Are you sure you want to delete this exercise? Your statistics will also be lost.'),
+              content: const Text('Are you sure you want to delete this exercise? Your statistics will also be lost.'),
               actions: <Widget>[
                 TextButton(
                   child: const Text('Cancel'),
@@ -266,8 +298,7 @@ class _MainPageState extends State<MainPage> {
                   icon: !snapshot.hasData || snapshot.data!.photoURL == null
                       ? const Icon(Icons.account_circle)
                       : CircleAvatar(
-                          backgroundImage:
-                              NetworkImage(snapshot.data!.photoURL ?? ''),
+                          backgroundImage: NetworkImage(snapshot.data!.photoURL ?? ''),
                           backgroundColor: Colors.transparent,
                         ),
                   tooltip: 'User Profile',
@@ -301,10 +332,7 @@ class _MainPageState extends State<MainPage> {
                   confirmRemoveDialog: _confirmRemoveDialog,
                   updateExercise: _updateExercise,
                   reorderExercise: _reorderExercise),
-              Statistics(
-                  names: _names,
-                  valueHistories: _valueHistories,
-                  currentDate: getCurrentDate()),
+              Statistics(names: _names, valueHistories: _valueHistories, currentDate: getCurrentDate()),
             ][_currentPageIndex],
       floatingActionButton: !_editMode && _currentPageIndex == 0
           ? FloatingActionButton(
