@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:minimal_progress_tracker/screens/user_profile.dart';
 import 'package:minimal_progress_tracker/screens/exercise_list.dart';
 import 'package:minimal_progress_tracker/screens/statistics.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'services/local_storage_service.dart';
+import 'services/firestore_service.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key, required this.titles});
@@ -17,6 +17,8 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   final _localStorage = LocalStorageService();
+  final _firestore = FirestoreService();
+  late bool signedIn;
   int _currentPageIndex = 0;
   bool _editMode = false;
   List<String> _names = [];
@@ -24,8 +26,6 @@ class _MainPageState extends State<MainPage> {
   List<Map<DateTime, int>> _valueHistories = [];
   String _exerciseName = '';
   String _exerciseDescription = '';
-  late bool signedIn;
-  late CollectionReference exercisesQuery;
 
   @override
   void initState() {
@@ -59,51 +59,21 @@ class _MainPageState extends State<MainPage> {
 
   // Load data from shared preferences or firestore
   Future<void> _loadData() async {
-    signedIn = FirebaseAuth.instance.currentUser != null;
+    final authUser = FirebaseAuth.instance.currentUser;
+    signedIn = authUser != null;
+    List<String> names, descriptions;
+    List<Map<DateTime, int>> valueHistories;
 
-    // Load local shared preferences data if no user is signed in
     if (!signedIn) {
-      final (names, descriptions, valueHistories) = await _localStorage.loadData();
-      setState(() {
-        _names = names;
-        _descriptions = descriptions;
-        _valueHistories = valueHistories;
-      });
+      (names, descriptions, valueHistories) = await _localStorage.loadData();
+    } else {
+      (names, descriptions, valueHistories) = await _firestore.loadData(authUser!.uid);
     }
-    // Load firestore data if user is signed in
-    else {
-      // Set firestore user reference and exercises query
-      final firestoreUser = FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid);
-      exercisesQuery = firestoreUser.collection('exercises');
-
-      // Check if user already exists in firestore
-      final user = await firestoreUser.get();
-      if (!user.exists) {
-        // If user does not exist, create user document in firestore
-        firestoreUser.set({});
-      } else {
-        // If user exists, load exercises data from firestore
-        final exercisesSnapshot = await exercisesQuery.orderBy("orderIndex").get();
-        for (final exerciseSnapshot in exercisesSnapshot.docs) {
-          final exercise = exerciseSnapshot.data() as Map<String, dynamic>;
-
-          // Get value history data from firestore
-          Map<DateTime, int> historyMap = {};
-          final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').orderBy("date").get();
-          for (final historySnapshot in historiesSnapshot.docs) {
-            final valueHistory = historySnapshot.data();
-            historyMap[valueHistory['date'].toDate()] = valueHistory['amount'];
-          }
-
-          // Add exercise data to local state
-          setState(() {
-            _names.add(exercise['name']);
-            _descriptions.add(exercise['description']);
-            _valueHistories.add(historyMap);
-          });
-        }
-      }
-    }
+    setState(() {
+      _names = names;
+      _descriptions = descriptions;
+      _valueHistories = valueHistories;
+    });
   }
 
   // Clear data variables
@@ -115,29 +85,6 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  // Update local preferences
-  // Future<void> _updatePreferences() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   // setState(() {
-  //   // if (FirebaseAuth.instance.currentUser == null) {
-  //   //   // Get the data from shared preferences
-  //   //   _names = prefs.getStringList('names') ?? [];
-  //   //   _descriptions = prefs.getStringList('descriptions') ?? [];
-  //   //   _valueHistories = getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
-  //   // }
-
-  //   // // Change data
-  //   // changePreferences();
-
-  //   // if (FirebaseAuth.instance.currentUser == null) {
-  //   // Save the data to shared preferences
-  //   prefs.setStringList('names', _names);
-  //   prefs.setStringList('descriptions', _descriptions);
-  //   prefs.setStringList('valueHistories', getHistoriesStringList(_valueHistories));
-  //   // }
-  //   // });
-  // }
-
   // Add new exercise
   Future<void> _addExercise() async {
     setState(() {
@@ -145,26 +92,10 @@ class _MainPageState extends State<MainPage> {
       _descriptions.add(_exerciseDescription);
       _valueHistories.add({getCurrentDate(): 0});
     });
-
-    // Update shared preferences if not signed in
     if (!signedIn) {
       _localStorage.updateAllPreferences(_names, _descriptions, _valueHistories);
-    }
-
-    // Create new firestore exercise if sigend in
-    else {
-      // Create new exercise document
-      exercisesQuery.add({
-        'name': _exerciseName,
-        'description': _exerciseDescription,
-        'orderIndex': _names.length,
-      }).then((final exerciseRef) {
-        // Create new value history document
-        exerciseRef.collection('valueHistory').add({
-          'date': getCurrentDate(),
-          'amount': 0,
-        });
-      });
+    } else {
+      _firestore.addExercise(_exerciseName, _exerciseDescription, _names.length, getCurrentDate());
     }
   }
 
@@ -175,28 +106,10 @@ class _MainPageState extends State<MainPage> {
       _descriptions.removeAt(index);
       _valueHistories.removeAt(index);
     });
-
-    // Update shared preferences if not signed in
     if (!signedIn) {
       _localStorage.updateAllPreferences(_names, _descriptions, _valueHistories);
-    }
-
-    // Remove firestore exercise if signed in
-    else {
-      // Get exercise and delete subcollection
-      final exercisesSnapshot = await exercisesQuery.orderBy('orderIndex').get();
-      final exerciseSnapshot = exercisesSnapshot.docs[index];
-      final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').get();
-      for (final historySnapshot in historiesSnapshot.docs) {
-        historySnapshot.reference.delete();
-      }
-      // Delete exercise document
-      exerciseSnapshot.reference.delete();
-
-      // Update orderIndex for remaining exercises
-      for (int i = index + 1; i < exercisesSnapshot.docs.length; i++) {
-        exercisesSnapshot.docs[i].reference.update({'orderIndex': i - 1});
-      }
+    } else {
+      _firestore.removeExercise(index);
     }
   }
 
@@ -210,9 +123,7 @@ class _MainPageState extends State<MainPage> {
       if (!signedIn) {
         _localStorage.updateNames(_names);
       } else {
-        exercisesQuery.orderBy("orderIndex").get().then((final exercisesSnapshot) {
-          exercisesSnapshot.docs[index].reference.update({'name': newName});
-        });
+        _firestore.updateName(index, newName);
       }
     }
     // Exercise description change
@@ -223,9 +134,7 @@ class _MainPageState extends State<MainPage> {
       if (!signedIn) {
         _localStorage.updateDescriptions(_descriptions);
       } else {
-        exercisesQuery.orderBy("orderIndex").get().then((final exercisesSnapshot) {
-          exercisesSnapshot.docs[index].reference.update({'description': newDescription});
-        });
+        _firestore.updateDescription(index, newDescription);
       }
     }
     // Exercise value change
@@ -236,23 +145,7 @@ class _MainPageState extends State<MainPage> {
       if (!signedIn) {
         _localStorage.updateValueHistories(_valueHistories);
       } else {
-        // Get last date of value history
-        final exercisesSnapshot = await exercisesQuery.orderBy("orderIndex").get();
-        final exerciseSnapshot = exercisesSnapshot.docs[index];
-        final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').orderBy("date").get();
-        DateTime lastDate = historiesSnapshot.docs.last.data()['date'].toDate();
-
-        // If last date is today, update amount, else add new value history
-        if (lastDate.year == getCurrentDate().year &&
-            lastDate.month == getCurrentDate().month &&
-            lastDate.day == getCurrentDate().day) {
-          historiesSnapshot.docs.last.reference.update({'amount': newValue});
-        } else {
-          exerciseSnapshot.reference.collection('valueHistory').add({
-            'date': getCurrentDate(),
-            'amount': newValue,
-          });
-        }
+        _firestore.updateValue(index, newValue, getCurrentDate());
       }
     }
   }
@@ -263,7 +156,6 @@ class _MainPageState extends State<MainPage> {
     if (newIndex > oldIndex) {
       newIndex -= 1;
     }
-
     setState(() {
       final nameItem = _names.removeAt(oldIndex);
       _names.insert(newIndex, nameItem);
@@ -272,30 +164,10 @@ class _MainPageState extends State<MainPage> {
       final valueItem = _valueHistories.removeAt(oldIndex);
       _valueHistories.insert(newIndex, valueItem);
     });
-
-    // Update shared preferences if not signed in
     if (!signedIn) {
       _localStorage.updateAllPreferences(_names, _descriptions, _valueHistories);
-    }
-
-    // Change order indices in firestore
-    else {
-      // Set exercise oldIndex to newIndex
-      final exercisesSnapshot = await exercisesQuery.orderBy('orderIndex').get();
-      exercisesSnapshot.docs[oldIndex].reference.update({'orderIndex': newIndex});
-
-      // Action for moving exercise up
-      if (newIndex > oldIndex) {
-        for (int i = oldIndex + 1; i < newIndex; i++) {
-          exercisesSnapshot.docs[i].reference.update({'orderIndex': i - 1});
-        }
-      }
-      // Action for moving exercise down
-      else {
-        for (int i = newIndex; i < oldIndex; i++) {
-          exercisesSnapshot.docs[i].reference.update({'orderIndex': i + 1});
-        }
-      }
+    } else {
+      _firestore.reorderExercises(oldIndex, newIndex);
     }
   }
 

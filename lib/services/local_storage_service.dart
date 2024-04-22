@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
+// Store and retrieve data from SharedPreferences
 class LocalStorageService {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
