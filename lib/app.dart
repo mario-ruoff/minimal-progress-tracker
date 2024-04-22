@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:minimal_progress_tracker/screens/user_profile.dart';
 import 'package:minimal_progress_tracker/screens/exercise_list.dart';
 import 'package:minimal_progress_tracker/screens/statistics.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:convert';
+import 'services/local_storage_service.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key, required this.titles});
@@ -17,6 +16,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  final _localStorage = LocalStorageService();
   int _currentPageIndex = 0;
   bool _editMode = false;
   List<String> _names = [];
@@ -30,30 +30,44 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _handleAuthChange();
   }
 
+  // Load data depending on user sign in status
+  void _handleAuthChange() {
+    print("Checking for auth change");
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      signedIn = user != null;
+      // Start app signed in or change to signed in state
+      if (signedIn) {
+        print("User signed in");
+        // If user doesnt already have local data
+        if (_names.isEmpty) {
+          // _loadData();
+        }
+        // If user already has local data
+        else {}
+      }
+      // Start app signed out or change to signed out state
+      else {
+        print("User signed out");
+        // _clearData();
+        _loadData();
+      }
+    });
+  }
+
+  // Load data from shared preferences or firestore
   Future<void> _loadData() async {
     signedIn = FirebaseAuth.instance.currentUser != null;
+
     // Load local shared preferences data if no user is signed in
     if (!signedIn) {
-      final prefs = await SharedPreferences.getInstance();
+      final (names, descriptions, valueHistories) = await _localStorage.loadData();
       setState(() {
-        // _names = ["Pushups", "Dips", "Pullups", "Squats"];
-        // _descriptions = ["Raised", "Medium bar", "High bar", ""];
-        // _valueHistories = getHistoriesMapList([
-        //   '{"2022-10-29 00:00:00.000":8, "2022-11-04 00:00:00.000":9, "2022-11-10 00:00:00.000":8, "2022-11-11 00:00:00.000":77}',
-        //   '{"2023-10-29 00:00:00.000":2, "2023-10-30 00:00:00.000":2, "2023-10-31 00:00:00.000":3, "2023-11-01 00:00:00.000":4, "2023-11-05 00:00:00.000":4, "2023-11-06 00:00:00.000":5, "2023-11-08 00:00:00.000":6, "2023-11-09 00:00:00.000":7}',
-        //   '{"2023-10-21 00:00:00.000":4, "2023-10-22 00:00:00.000":4, "2023-10-24 00:00:00.000":5, "2023-10-25 00:00:00.000":6}',
-        //   '{"2023-10-05 00:00:00.000":11, "2023-10-22 00:00:00.000":12, "2023-10-24 00:00:00.000":10}'
-        // ]);
-        // prefs.setStringList('names', _names);
-        // prefs.setStringList('descriptions', _descriptions);
-        // prefs.setStringList(
-        //     'valueHistories', getHistoriesStringList(_valueHistories));
-        _names = prefs.getStringList('names') ?? [];
-        _descriptions = prefs.getStringList('descriptions') ?? [];
-        _valueHistories = getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+        _names = names;
+        _descriptions = descriptions;
+        _valueHistories = valueHistories;
       });
     }
     // Load firestore data if user is signed in
@@ -92,37 +106,53 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  Future<void> _updatePreferences(Function changePreferences) async {
-    final prefs = await SharedPreferences.getInstance();
+  // Clear data variables
+  void _clearData() {
     setState(() {
-      if (FirebaseAuth.instance.currentUser == null) {
-        // Get the data from shared preferences
-        _names = prefs.getStringList('names') ?? [];
-        _descriptions = prefs.getStringList('descriptions') ?? [];
-        _valueHistories = getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
-      }
-
-      // Change data
-      changePreferences();
-
-      if (FirebaseAuth.instance.currentUser == null) {
-        // Save the data to shared preferences
-        prefs.setStringList('names', _names);
-        prefs.setStringList('descriptions', _descriptions);
-        prefs.setStringList('valueHistories', getHistoriesStringList(_valueHistories));
-      }
+      _names = [];
+      _descriptions = [];
+      _valueHistories = [];
     });
   }
 
-  void _addExercise() {
-    _updatePreferences(() {
+  // Update local preferences
+  // Future<void> _updatePreferences() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   // setState(() {
+  //   // if (FirebaseAuth.instance.currentUser == null) {
+  //   //   // Get the data from shared preferences
+  //   //   _names = prefs.getStringList('names') ?? [];
+  //   //   _descriptions = prefs.getStringList('descriptions') ?? [];
+  //   //   _valueHistories = getHistoriesMapList(prefs.getStringList('valueHistories') ?? []);
+  //   // }
+
+  //   // // Change data
+  //   // changePreferences();
+
+  //   // if (FirebaseAuth.instance.currentUser == null) {
+  //   // Save the data to shared preferences
+  //   prefs.setStringList('names', _names);
+  //   prefs.setStringList('descriptions', _descriptions);
+  //   prefs.setStringList('valueHistories', getHistoriesStringList(_valueHistories));
+  //   // }
+  //   // });
+  // }
+
+  // Add new exercise
+  Future<void> _addExercise() async {
+    setState(() {
       _names.add(_exerciseName);
       _descriptions.add(_exerciseDescription);
       _valueHistories.add({getCurrentDate(): 0});
     });
 
-    // Create new firestore exercise
-    if (signedIn) {
+    // Update shared preferences if not signed in
+    if (!signedIn) {
+      _localStorage.updateAllPreferences(_names, _descriptions, _valueHistories);
+    }
+
+    // Create new firestore exercise if sigend in
+    else {
       // Create new exercise document
       exercisesQuery.add({
         'name': _exerciseName,
@@ -138,15 +168,21 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  // Remove exercise
   Future<void> _removeExercise(index) async {
-    _updatePreferences(() {
+    setState(() {
       _names.removeAt(index);
       _descriptions.removeAt(index);
       _valueHistories.removeAt(index);
     });
 
-    // Remove firestore exercise
-    if (signedIn) {
+    // Update shared preferences if not signed in
+    if (!signedIn) {
+      _localStorage.updateAllPreferences(_names, _descriptions, _valueHistories);
+    }
+
+    // Remove firestore exercise if signed in
+    else {
       // Get exercise and delete subcollection
       final exercisesSnapshot = await exercisesQuery.orderBy('orderIndex').get();
       final exerciseSnapshot = exercisesSnapshot.docs[index];
@@ -164,59 +200,71 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  void _updateExercise(index, newName, newDescription, newValue) {
-    _updatePreferences(() async {
-      // Exercise name change
-      if (_names[index] != newName) {
+  // Update exercise
+  Future<void> _updateExercise(index, newName, newDescription, newValue) async {
+    // Exercise name change
+    if (_names[index] != newName) {
+      setState(() {
         _names[index] = newName;
-        if (signedIn) {
-          exercisesQuery.orderBy("orderIndex").get().then((final exercisesSnapshot) {
-            exercisesSnapshot.docs[index].reference.update({'name': newName});
-          });
-        }
+      });
+      if (!signedIn) {
+        _localStorage.updateNames(_names);
+      } else {
+        exercisesQuery.orderBy("orderIndex").get().then((final exercisesSnapshot) {
+          exercisesSnapshot.docs[index].reference.update({'name': newName});
+        });
       }
-      // Exercise description change
-      if (_descriptions[index] != newDescription) {
+    }
+    // Exercise description change
+    if (_descriptions[index] != newDescription) {
+      setState(() {
         _descriptions[index] = newDescription;
-        if (signedIn) {
-          exercisesQuery.orderBy("orderIndex").get().then((final exercisesSnapshot) {
-            exercisesSnapshot.docs[index].reference.update({'description': newDescription});
+      });
+      if (!signedIn) {
+        _localStorage.updateDescriptions(_descriptions);
+      } else {
+        exercisesQuery.orderBy("orderIndex").get().then((final exercisesSnapshot) {
+          exercisesSnapshot.docs[index].reference.update({'description': newDescription});
+        });
+      }
+    }
+    // Exercise value change
+    if (newValue != null) {
+      setState(() {
+        _valueHistories[index][getCurrentDate()] = newValue;
+      });
+      if (!signedIn) {
+        _localStorage.updateValueHistories(_valueHistories);
+      } else {
+        // Get last date of value history
+        final exercisesSnapshot = await exercisesQuery.orderBy("orderIndex").get();
+        final exerciseSnapshot = exercisesSnapshot.docs[index];
+        final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').orderBy("date").get();
+        DateTime lastDate = historiesSnapshot.docs.last.data()['date'].toDate();
+
+        // If last date is today, update amount, else add new value history
+        if (lastDate.year == getCurrentDate().year &&
+            lastDate.month == getCurrentDate().month &&
+            lastDate.day == getCurrentDate().day) {
+          historiesSnapshot.docs.last.reference.update({'amount': newValue});
+        } else {
+          exerciseSnapshot.reference.collection('valueHistory').add({
+            'date': getCurrentDate(),
+            'amount': newValue,
           });
         }
       }
-      // Exercise value change
-      if (newValue != null) {
-        _valueHistories[index][getCurrentDate()] = newValue;
-        if (signedIn) {
-          // Get last date of value history
-          final exercisesSnapshot = await exercisesQuery.orderBy("orderIndex").get();
-          final exerciseSnapshot = exercisesSnapshot.docs[index];
-          final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').orderBy("date").get();
-          DateTime lastDate = historiesSnapshot.docs.last.data()['date'].toDate();
-
-          // If last date is today, update amount, else add new value history
-          if (lastDate.year == getCurrentDate().year &&
-              lastDate.month == getCurrentDate().month &&
-              lastDate.day == getCurrentDate().day) {
-            historiesSnapshot.docs.last.reference.update({'amount': newValue});
-          } else {
-            exerciseSnapshot.reference.collection('valueHistory').add({
-              'date': getCurrentDate(),
-              'amount': newValue,
-            });
-          }
-        }
-      }
-    });
+    }
   }
 
+  // Reorder exercise
   void _reorderExercise(oldIndex, newIndex) async {
-    _updatePreferences(() {
-      // Change indices to more intuitive values
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
+    // Change indices to more intuitive values
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
 
+    setState(() {
       final nameItem = _names.removeAt(oldIndex);
       _names.insert(newIndex, nameItem);
       final descriptionItem = _descriptions.removeAt(oldIndex);
@@ -224,7 +272,14 @@ class _MainPageState extends State<MainPage> {
       final valueItem = _valueHistories.removeAt(oldIndex);
       _valueHistories.insert(newIndex, valueItem);
     });
-    if (signedIn) {
+
+    // Update shared preferences if not signed in
+    if (!signedIn) {
+      _localStorage.updateAllPreferences(_names, _descriptions, _valueHistories);
+    }
+
+    // Change order indices in firestore
+    else {
       // Set exercise oldIndex to newIndex
       final exercisesSnapshot = await exercisesQuery.orderBy('orderIndex').get();
       exercisesSnapshot.docs[oldIndex].reference.update({'orderIndex': newIndex});
@@ -242,28 +297,6 @@ class _MainPageState extends State<MainPage> {
         }
       }
     }
-  }
-
-  List<Map<DateTime, int>> getHistoriesMapList(List<String> historiesStringList) {
-    List<Map<DateTime, int>> returnList = [];
-    for (String historyString in historiesStringList) {
-      dynamic historyDict = jsonDecode(historyString);
-      Map<DateTime, int> historyMap = {};
-      for (String historyDate in historyDict.keys) {
-        historyMap[DateTime.parse(historyDate)] = historyDict[historyDate];
-      }
-      returnList.add(historyMap);
-    }
-    return returnList;
-  }
-
-  List<String> getHistoriesStringList(List<Map<DateTime, int>> historiesMapList) {
-    List<String> returnList = [];
-    for (Map<DateTime, int> historyMap in historiesMapList) {
-      String historyString = jsonEncode(historyMap.map((key, value) => MapEntry(key.toString(), value)));
-      returnList.add(historyString);
-    }
-    return returnList;
   }
 
   DateTime getCurrentDate() {
