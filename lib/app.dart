@@ -35,24 +35,38 @@ class _MainPageState extends State<MainPage> {
 
   // Load data depending on user sign in status
   void _handleAuthChange() {
-    print("Checking for auth change");
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    // auth state change is also executed on app start
+    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
       signedIn = user != null;
-      // Start app signed in or change to signed in state
       if (signedIn) {
-        print("User signed in");
-        // If user doesnt already have local data
         if (_names.isEmpty) {
-          // _loadData();
+          // | Local -> Firestore |
+          // | -     |  ?         | => load firestore data, no moving data
+          _loadData();
+        } else {
+          if (await _firestore.isDataOnFirestore(user!.uid)) {
+            // | Local -> Firestore |
+            // | data  |  data      | => ask to override firestore data
+            _overrideDataDialog();
+          } else {
+            // | Local -> Firestore |
+            // | data  |  -         | => move local data to firestore
+            _firestore.moveData(_names, _descriptions, _valueHistories, false);
+            _clearData();
+            _loadData();
+          }
         }
-        // If user already has local data
-        else {}
-      }
-      // Start app signed out or change to signed out state
-      else {
-        print("User signed out");
-        // _clearData();
-        _loadData();
+      } else {
+        if (_names.isEmpty) {
+          // | Local <- Firestore |
+          // | ?      | -         | => load local data, no moving data
+          _loadData();
+        } else {
+          // | Local <- Firestore |
+          // | ?      | data      | => load local data, no moving data
+          _clearData();
+          _loadData();
+        }
       }
     });
   }
@@ -253,6 +267,39 @@ class _MainPageState extends State<MainPage> {
                     Navigator.pop(context);
                   },
                   child: const Text('Delete'),
+                ),
+              ],
+            );
+          }));
+        });
+  }
+
+  Future<void> _overrideDataDialog() async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(builder: ((context, setState) {
+            return AlertDialog(
+              title: const Text('Override data'),
+              content: const Text(
+                  'You already have data stored in the cloud. Do you want to override it with your local data?'),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    // Load cloud data, but keep local data
+                    _loadData();
+                    Navigator.pop(context);
+                  },
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Override cloud data with local data
+                    _firestore.moveData(_names, _descriptions, _valueHistories, true);
+                    // _loadData();
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Override'),
                 ),
               ],
             );
