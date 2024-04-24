@@ -42,8 +42,7 @@ class _ExerciseListState extends State<ExerciseList> {
               key: Key('$index'),
               child: ListTile(
                 leading: widget.editMode
-                    ? ReorderableDragStartListener(
-                        index: index, child: const Icon(Icons.drag_handle))
+                    ? ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_handle))
                     : null,
                 title: Text(exercise),
                 subtitle: Text(description),
@@ -55,8 +54,7 @@ class _ExerciseListState extends State<ExerciseList> {
                           onPressed: widget.editMode
                               ? () {
                                   setState(() {
-                                    widget.exerciseDialog(context, index,
-                                        exercise, description, false);
+                                    widget.exerciseDialog(context, index, exercise, description, false);
                                   });
                                 }
                               : null,
@@ -74,32 +72,46 @@ class _ExerciseListState extends State<ExerciseList> {
                         )
                       ])
                     : Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                        IconButton(
-                          icon: const Icon(Icons.remove),
-                          onPressed: value <= 0
-                              ? null
-                              : () {
-                                  widget.updateExercise(
-                                      index, exercise, description, value - 1);
-                                },
-                        ),
+                        InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: value <= 0
+                                ? null
+                                : () {
+                                    widget.updateExercise(index, exercise, description, value - 1);
+                                  },
+                            onLongPress: value <= 9
+                                ? null
+                                : () {
+                                    widget.updateExercise(index, exercise, description, value - 10);
+                                  },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(Icons.remove, color: value > 0 ? Colors.grey.shade400 : Colors.grey.shade700),
+                            )),
                         SizedBox(
-                          width: 22,
+                          width: 32,
                           child: Text(
                             value.toString(),
                             style: const TextStyle(fontSize: 18),
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: value >= 99
-                              ? null
-                              : () {
-                                  widget.updateExercise(
-                                      index, exercise, description, value + 1);
-                                },
-                        ),
+                        InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: value >= 99
+                                ? null
+                                : () {
+                                    widget.updateExercise(index, exercise, description, value + 1);
+                                  },
+                            onLongPress: value >= 90
+                                ? null
+                                : () {
+                                    widget.updateExercise(index, exercise, description, value + 10);
+                                  },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(Icons.add, color: value < 99 ? Colors.grey.shade400 : Colors.grey.shade700),
+                            )),
                       ]),
               ));
         },
