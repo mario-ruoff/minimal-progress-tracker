@@ -156,8 +156,4 @@ class FirestoreService {
     }
     await batch.commit();
   }
-
-  void deleteUser() {
-    _firestoreUser.delete();
-  }
 }
