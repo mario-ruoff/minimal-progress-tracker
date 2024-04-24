@@ -74,4 +74,18 @@ class LocalStorageService {
     }
     return returnList;
   }
+
+  Future<bool> isDataInStorage() async {
+    final prefs = await _prefs;
+    final names = prefs.getStringList('names');
+    return names != null && names.isNotEmpty;
+  }
+
+  void moveData(final names, final descriptions, final valueHistories) {
+    _prefs.then((SharedPreferences prefs) {
+      prefs.setStringList('names', names);
+      prefs.setStringList('descriptions', descriptions);
+      prefs.setStringList('valueHistories', getHistoriesStringList(valueHistories));
+    });
+  }
 }

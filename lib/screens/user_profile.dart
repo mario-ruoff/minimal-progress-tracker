@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import '../services/firestore_service.dart';
 
 class UserProfile extends StatelessWidget {
-  const UserProfile({super.key});
+  const UserProfile({super.key, required this.firestore});
+  final FirestoreService firestore;
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +26,7 @@ class UserProfile extends StatelessWidget {
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
                       const SizedBox(height: 20),
-                      Text(
-                          'You can securely save your training progress to the cloud by signing in.',
+                      Text('You can securely save your training progress to the cloud by signing in.',
                           style: Theme.of(context).textTheme.bodyLarge),
                     ],
                   ),
@@ -44,23 +45,23 @@ class UserProfile extends StatelessWidget {
         return ProfileScreen(
           showDeleteConfirmationDialog: true,
           appBar: AppBar(
-            title: Text('User Profile',
-                style: Theme.of(context).textTheme.headlineMedium),
+            title: Text('User Profile', style: Theme.of(context).textTheme.headlineMedium),
           ),
           actions: [
             SignedOutAction((context) {
               Navigator.of(context).pop();
             }),
             AccountDeletedAction((context, user) {
-              // TODO: Delete user data in firestore
+              firestore.moveData([], [], [], true);
+              firestore.deleteUser();
+              Navigator.of(context).pop();
             })
           ],
           providers: const [],
           children: [
             const SizedBox(height: 8),
             const Divider(),
-            Text('Your data is securely stored in the cloud.',
-                style: Theme.of(context).textTheme.bodyLarge),
+            Text('Your data is securely stored in the cloud.', style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 8),
           ],
         );

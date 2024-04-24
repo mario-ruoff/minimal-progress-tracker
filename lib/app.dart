@@ -47,7 +47,7 @@ class _MainPageState extends State<MainPage> {
           if (await _firestore.isDataOnFirestore(user!.uid)) {
             // | Local -> Firestore |
             // | data  |  data      | => ask to override firestore data
-            _overrideDataDialog();
+            _overrideDataDialog(true);
           } else {
             // | Local -> Firestore |
             // | data  |  -         | => move local data to firestore
@@ -62,10 +62,17 @@ class _MainPageState extends State<MainPage> {
           // | ?      | -         | => load local data, no moving data
           _loadData();
         } else {
-          // | Local <- Firestore |
-          // | ?      | data      | => load local data, no moving data
-          _clearData();
-          _loadData();
+          if (await _localStorage.isDataInStorage()) {
+            // | Local <- Firestore |
+            // | data   | data      | => ask to override local data
+            _overrideDataDialog(false);
+          } else {
+            // | Local <- Firestore |
+            // | -      | data      | => move firestore data to local
+            _localStorage.moveData(_names, _descriptions, _valueHistories);
+            _clearData();
+            _loadData();
+          }
         }
       }
     });
@@ -274,29 +281,33 @@ class _MainPageState extends State<MainPage> {
         });
   }
 
-  Future<void> _overrideDataDialog() async {
+  Future<void> _overrideDataDialog(bool toCloud) async {
     return showDialog(
         context: context,
         builder: (context) {
           return StatefulBuilder(builder: ((context, setState) {
             return AlertDialog(
-              title: const Text('Override data'),
-              content: const Text(
-                  'You already have data stored in the cloud. Do you want to override it with your local data?'),
+              title: Text(toCloud ? 'Override Cloud Data' : 'Move Cloud Data'),
+              content: Text(toCloud
+                  ? 'You already have data stored in the cloud. Do you want to override it with your local data?'
+                  : 'Do you want to move your cloud data back to your local storage?'),
               actions: <Widget>[
                 TextButton(
                   child: const Text('Cancel'),
                   onPressed: () {
-                    // Load cloud data, but keep local data
+                    // Load data, do not override
                     _loadData();
                     Navigator.pop(context);
                   },
                 ),
                 TextButton(
                   onPressed: () {
-                    // Override cloud data with local data
-                    _firestore.moveData(_names, _descriptions, _valueHistories, true);
-                    // _loadData();
+                    toCloud
+                        // Override cloud data with local data
+                        ? _firestore.moveData(_names, _descriptions, _valueHistories, true)
+                        // Override local data with cloud data
+                        : _localStorage.moveData(_names, _descriptions, _valueHistories);
+                    // no new data loading required, since data is already in desired state
                     Navigator.pop(context);
                   },
                   child: const Text('Override'),
@@ -310,7 +321,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      endDrawer: const Drawer(width: 350, child: UserProfile()),
+      endDrawer: Drawer(width: 350, child: UserProfile(firestore: _firestore)),
       appBar: AppBar(
         title: Text(widget.titles[_currentPageIndex]),
         actions: [
