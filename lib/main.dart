@@ -12,12 +12,10 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.debug,
+    androidProvider: AndroidProvider.playIntegrity,
   );
   FirebaseUIAuth.configureProviders([
-    GoogleProvider(
-        clientId:
-            "85649441713-s99pdkt3vl4bnhetovnnie2kcm7e2ooj.apps.googleusercontent.com"),
+    GoogleProvider(clientId: "85649441713-s99pdkt3vl4bnhetovnnie2kcm7e2ooj.apps.googleusercontent.com"),
   ]);
   runApp(const ProgressTracker());
 }
