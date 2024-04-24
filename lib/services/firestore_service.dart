@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 // Store and retreive data from Firestore
 class FirestoreService {
@@ -124,39 +123,38 @@ class FirestoreService {
     return exercisesSnapshot.docs.isNotEmpty;
   }
 
-  void moveData(final names, final descriptions, final valueHistories, bool overrideMode) {
+  Future<void> moveData(final names, final descriptions, final valueHistories, bool overrideMode) async {
     final batch = FirebaseFirestore.instance.batch();
-    _firestoreUser.collection('exercises').get().then((final exercisesSnapshot) async {
-      // Delete all exercises if override mode is enabled
-      if (overrideMode) {
-        for (final exerciseSnapshot in exercisesSnapshot.docs) {
-          // Delete valuehistories of exercises
-          final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').get();
-          for (final historySnapshot in historiesSnapshot.docs) {
-            batch.delete(historySnapshot.reference);
-          }
-          batch.delete(exerciseSnapshot.reference);
+    final exercisesSnapshot = await _firestoreUser.collection('exercises').get();
+    // Delete all exercises if override mode is enabled
+    if (overrideMode) {
+      for (final exerciseSnapshot in exercisesSnapshot.docs) {
+        // Delete valuehistories of exercises
+        final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').get();
+        for (final historySnapshot in historiesSnapshot.docs) {
+          batch.delete(historySnapshot.reference);
         }
+        batch.delete(exerciseSnapshot.reference);
       }
+    }
 
-      // Add new exercises in batch
-      for (int i = 0; i < names.length; i++) {
-        final exerciseRef = _firestoreUser.collection('exercises').doc();
-        batch.set(exerciseRef, {
-          'name': names[i],
-          'description': descriptions[i],
-          'orderIndex': i,
+    // Add new exercises in batch
+    for (int i = 0; i < names.length; i++) {
+      final exerciseRef = _firestoreUser.collection('exercises').doc();
+      batch.set(exerciseRef, {
+        'name': names[i],
+        'description': descriptions[i],
+        'orderIndex': i,
+      });
+      // Add value histories in batch
+      for (final history in valueHistories[i].entries) {
+        batch.set(exerciseRef.collection('valueHistory').doc(), {
+          'date': history.key,
+          'amount': history.value,
         });
-        // Add value histories in batch
-        for (final history in valueHistories[i].entries) {
-          batch.set(exerciseRef.collection('valueHistory').doc(), {
-            'date': history.key,
-            'amount': history.value,
-          });
-        }
       }
-      batch.commit();
-    });
+    }
+    await batch.commit();
   }
 
   void deleteUser() {

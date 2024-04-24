@@ -54,7 +54,6 @@ class UserProfile extends StatelessWidget {
             AccountDeletedAction((context, user) {
               firestore.moveData([], [], [], true);
               firestore.deleteUser();
-              Navigator.of(context).pop();
             })
           ],
           providers: const [],

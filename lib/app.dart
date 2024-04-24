@@ -51,7 +51,7 @@ class _MainPageState extends State<MainPage> {
           } else {
             // | Local -> Firestore |
             // | data  |  -         | => move local data to firestore
-            _firestore.moveData(_names, _descriptions, _valueHistories, false);
+            await _firestore.moveData(_names, _descriptions, _valueHistories, false);
             _clearData();
             _loadData();
           }
@@ -281,7 +281,7 @@ class _MainPageState extends State<MainPage> {
         });
   }
 
-  Future<void> _overrideDataDialog(bool toCloud) async {
+  Future<void> _overrideDataDialog(bool toCloud) {
     return showDialog(
         context: context,
         builder: (context) {
