@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 class ExerciseList extends StatefulWidget {
   const ExerciseList(
@@ -33,8 +32,9 @@ class _ExerciseListState extends State<ExerciseList> {
   @override
   Widget build(BuildContext context) {
     return ReorderableListView.builder(
-        padding: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.only(top: 10, bottom: 180),
         itemCount: widget.valueHistories.length,
+        itemExtent: 80,
         itemBuilder: (context, index) {
           final exercise = widget.names[index];
           final description = widget.descriptions[index];

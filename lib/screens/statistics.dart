@@ -6,11 +6,7 @@ import 'package:universal_io/io.dart';
 import 'dart:math';
 
 class Statistics extends StatefulWidget {
-  const Statistics(
-      {super.key,
-      required this.names,
-      required this.valueHistories,
-      required this.currentDate});
+  const Statistics({super.key, required this.names, required this.valueHistories, required this.currentDate});
 
   final List<String> names;
   final List<Map<DateTime, int>> valueHistories;
@@ -40,6 +36,7 @@ class _StatisticsState extends State<Statistics> {
     return ListView.builder(
         padding: const EdgeInsets.only(top: 10),
         itemCount: widget.valueHistories.length,
+        itemExtent: 235,
         itemBuilder: (context, index) {
           return Container(
               margin: const EdgeInsets.all(5),
@@ -60,14 +57,12 @@ class _StatisticsState extends State<Statistics> {
                           top: 44,
                           bottom: 12,
                         ),
-                        child:
-                            LineChart(mainData(widget.valueHistories[index])),
+                        child: LineChart(mainData(widget.valueHistories[index])),
                       ),
                     ),
                   ),
                   Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                       child: Text(
                         widget.names[index],
                         style: TextStyle(
@@ -99,9 +94,7 @@ class _StatisticsState extends State<Statistics> {
 
     // Calculate grid intervals to avoid cluttering
     double xInterval = (daySpan > minDays * 2) ? (daySpan / minDays) : 1;
-    double yInterval = (maxHistoryValue > minValueScale * 2)
-        ? maxHistoryValue / minValueScale
-        : 1;
+    double yInterval = (maxHistoryValue > minValueScale * 2) ? maxHistoryValue / minValueScale : 1;
 
     return LineChartData(
       gridData: FlGridData(
@@ -157,8 +150,7 @@ class _StatisticsState extends State<Statistics> {
       maxY: maxHistoryValue.toDouble(),
       lineBarsData: [
         LineChartBarData(
-          spots:
-              getHistorySpots(valueHistory, firstDay, daySpan, maxHistoryValue),
+          spots: getHistorySpots(valueHistory, firstDay, daySpan, maxHistoryValue),
           isCurved: false,
           gradient: LinearGradient(
             colors: gradientColors,
@@ -167,17 +159,14 @@ class _StatisticsState extends State<Statistics> {
           isStrokeCapRound: true,
           isStrokeJoinRound: true,
           isStepLineChart: true,
-          lineChartStepData: const LineChartStepData(
-              stepDirection: LineChartStepData.stepDirectionForward),
+          lineChartStepData: const LineChartStepData(stepDirection: LineChartStepData.stepDirectionForward),
           dotData: const FlDotData(
             show: false,
           ),
           belowBarData: BarAreaData(
             show: true,
             gradient: LinearGradient(
-              colors: gradientColors
-                  .map((color) => color.withOpacity(0.3))
-                  .toList(),
+              colors: gradientColors.map((color) => color.withOpacity(0.3)).toList(),
             ),
           ),
         ),
@@ -196,8 +185,7 @@ class _StatisticsState extends State<Statistics> {
     );
   }
 
-  List<FlSpot> getHistorySpots(Map<DateTime, int> valueHistory,
-      DateTime firstDay, int daySpan, int maxHistoryValue) {
+  List<FlSpot> getHistorySpots(Map<DateTime, int> valueHistory, DateTime firstDay, int daySpan, int maxHistoryValue) {
     List<FlSpot> spots = [];
     int? previousYValue;
 
@@ -223,8 +211,7 @@ class _StatisticsState extends State<Statistics> {
     );
     Widget text;
     int intValue = value.toInt();
-    DateTime valueDate = widget.currentDate
-        .subtract(Duration(days: meta.max.toInt() - intValue - 1));
+    DateTime valueDate = widget.currentDate.subtract(Duration(days: meta.max.toInt() - intValue - 1));
 
     if (intValue == (meta.max / 3 - meta.max / 6).round() ||
         intValue == (meta.max / 3 * 2 - meta.max / 6).round() ||
@@ -262,7 +249,6 @@ class _StatisticsState extends State<Statistics> {
     }
 
     return Padding(
-        padding: const EdgeInsets.only(right: 12),
-        child: Text(text, style: style, textAlign: TextAlign.right));
+        padding: const EdgeInsets.only(right: 12), child: Text(text, style: style, textAlign: TextAlign.right));
   }
 }
