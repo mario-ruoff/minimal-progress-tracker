@@ -21,6 +21,7 @@ class _MainPageState extends State<MainPage> {
   late bool signedIn;
   int _currentPageIndex = 0;
   bool _editMode = false;
+  bool _dataLoaded = false;
   List<String> _names = [];
   List<String> _descriptions = [];
   List<Map<DateTime, int>> _valueHistories = [];
@@ -37,9 +38,6 @@ class _MainPageState extends State<MainPage> {
   void _handleAuthChange() {
     // auth state change is also executed on app start
     FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-      print("checking user");
-      print(user?.uid);
-      print(FirebaseAuth.instance.currentUser?.uid);
       signedIn = user != null;
       if (signedIn) {
         if (_names.isEmpty) {
@@ -88,6 +86,10 @@ class _MainPageState extends State<MainPage> {
     List<String> names, descriptions;
     List<Map<DateTime, int>> valueHistories;
 
+    setState(() {
+      _dataLoaded = false;
+    });
+
     if (!signedIn) {
       (names, descriptions, valueHistories) = await _localStorage.loadData();
     } else {
@@ -97,6 +99,7 @@ class _MainPageState extends State<MainPage> {
       _names = names;
       _descriptions = descriptions;
       _valueHistories = valueHistories;
+      _dataLoaded = true;
     });
   }
 
@@ -356,31 +359,46 @@ class _MainPageState extends State<MainPage> {
               }),
         ],
       ),
-      body: _valueHistories.isEmpty
-          ? Container(
-              padding: const EdgeInsets.symmetric(
-                vertical: 20,
-                horizontal: 10,
-              ),
-              child: Center(
-                child: Text(
-                  'No exercises added yet',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+      body: !_dataLoaded
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text('Loading Exercises...', style: Theme.of(context).textTheme.bodyLarge),
+                ],
               ),
             )
-          : <Widget>[
-              ExerciseList(
-                  editMode: _editMode,
-                  names: _names,
-                  descriptions: _descriptions,
-                  valueHistories: _valueHistories,
-                  exerciseDialog: _exerciseDialog,
-                  confirmRemoveDialog: _confirmRemoveDialog,
-                  updateExercise: _updateExercise,
-                  reorderExercise: _reorderExercise),
-              Statistics(names: _names, valueHistories: _valueHistories, currentDate: getCurrentDate()),
-            ][_currentPageIndex],
+          : (_names.isEmpty
+              ? Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 10,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'No exercises added yet',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                )
+              : <Widget>[
+                  ExerciseList(
+                      editMode: _editMode,
+                      names: _names,
+                      descriptions: _descriptions,
+                      valueHistories: _valueHistories,
+                      exerciseDialog: _exerciseDialog,
+                      confirmRemoveDialog: _confirmRemoveDialog,
+                      updateExercise: _updateExercise,
+                      reorderExercise: _reorderExercise),
+                  Statistics(
+                    names: _names,
+                    valueHistories: _valueHistories,
+                    currentDate: getCurrentDate(),
+                  ),
+                ][_currentPageIndex]),
       floatingActionButton: !_editMode && _currentPageIndex == 0
           ? FloatingActionButton(
               onPressed: () {

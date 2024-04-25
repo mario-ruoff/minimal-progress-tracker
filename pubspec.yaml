@@ -1,7 +1,7 @@
 name: minimal_progress_tracker
 description: "An app to track training progress, without ads or in-app purchases"
 publish_to: 'none'
-version: 1.1.1+26
+version: 1.1.2+27
 
 environment:
   sdk: '>=3.3.3 <4.0.0'
