@@ -12,21 +12,27 @@ class FirestoreService {
     List<Map<DateTime, int>> valueHistories = [];
 
     // Check if user already exists in firestore
-    // If user exists, load exercises data from firestore
-    final exercisesSnapshot = await _firestoreUser.collection('exercises').orderBy("orderIndex").get();
-    for (final exerciseSnapshot in exercisesSnapshot.docs) {
-      final exercise = exerciseSnapshot.data();
-      names.add(exercise['name']);
-      descriptions.add(exercise['description']);
+    final user = await _firestoreUser.get();
+    if (!user.exists) {
+      // If user does not exist, create new user document
+      FirebaseFirestore.instance.collection('users').doc(userUid).set({});
+    } else {
+      // If user exists, load exercises data from firestore
+      final exercisesSnapshot = await _firestoreUser.collection('exercises').orderBy("orderIndex").get();
+      for (final exerciseSnapshot in exercisesSnapshot.docs) {
+        final exercise = exerciseSnapshot.data();
+        names.add(exercise['name']);
+        descriptions.add(exercise['description']);
 
-      // Get value history data from firestore
-      Map<DateTime, int> historyMap = {};
-      final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').orderBy("date").get();
-      for (final historySnapshot in historiesSnapshot.docs) {
-        final valueHistory = historySnapshot.data();
-        historyMap[valueHistory['date'].toDate()] = valueHistory['amount'];
+        // Get value history data from firestore
+        Map<DateTime, int> historyMap = {};
+        final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').orderBy("date").get();
+        for (final historySnapshot in historiesSnapshot.docs) {
+          final valueHistory = historySnapshot.data();
+          historyMap[valueHistory['date'].toDate()] = valueHistory['amount'];
+        }
+        valueHistories.add(historyMap);
       }
-      valueHistories.add(historyMap);
     }
 
     return (names, descriptions, valueHistories);
@@ -115,10 +121,14 @@ class FirestoreService {
   Future<bool> isDataOnFirestore(final userUid) async {
     _firestoreUser = FirebaseFirestore.instance.collection('users').doc(userUid);
     final user = await _firestoreUser.get();
+
+    // Check if user exists in firestore, if not create user document
     if (!user.exists) {
       FirebaseFirestore.instance.collection('users').doc(userUid).set({});
       return false;
     }
+
+    // Check if exercises exist in firestore
     final exercisesSnapshot = await _firestoreUser.collection('exercises').get();
     return exercisesSnapshot.docs.isNotEmpty;
   }

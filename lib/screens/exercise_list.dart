@@ -27,7 +27,8 @@ class ExerciseList extends StatefulWidget {
 }
 
 class _ExerciseListState extends State<ExerciseList> {
-  var random = Random();
+  final lowerValueLimit = 0;
+  final upperValueLimit = 999;
 
   @override
   Widget build(BuildContext context) {
@@ -74,22 +75,23 @@ class _ExerciseListState extends State<ExerciseList> {
                     : Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
                         InkWell(
                             customBorder: const CircleBorder(),
-                            onTap: value <= 0
+                            onTap: value <= lowerValueLimit
                                 ? null
                                 : () {
                                     widget.updateExercise(index, exercise, description, value - 1);
                                   },
-                            onLongPress: value <= 9
+                            onLongPress: value <= lowerValueLimit + 9
                                 ? null
                                 : () {
                                     widget.updateExercise(index, exercise, description, value - 10);
                                   },
                             child: Padding(
                               padding: const EdgeInsets.all(8),
-                              child: Icon(Icons.remove, color: value > 0 ? Colors.grey.shade400 : Colors.grey.shade700),
+                              child: Icon(Icons.remove,
+                                  color: value > lowerValueLimit ? Colors.grey.shade400 : Colors.grey.shade700),
                             )),
                         SizedBox(
-                          width: 32,
+                          width: 34,
                           child: Text(
                             value.toString(),
                             style: const TextStyle(fontSize: 18),
@@ -98,19 +100,20 @@ class _ExerciseListState extends State<ExerciseList> {
                         ),
                         InkWell(
                             customBorder: const CircleBorder(),
-                            onTap: value >= 99
+                            onTap: value >= upperValueLimit
                                 ? null
                                 : () {
                                     widget.updateExercise(index, exercise, description, value + 1);
                                   },
-                            onLongPress: value >= 90
+                            onLongPress: value >= upperValueLimit - 9
                                 ? null
                                 : () {
                                     widget.updateExercise(index, exercise, description, value + 10);
                                   },
                             child: Padding(
                               padding: const EdgeInsets.all(8),
-                              child: Icon(Icons.add, color: value < 99 ? Colors.grey.shade400 : Colors.grey.shade700),
+                              child: Icon(Icons.add,
+                                  color: value < upperValueLimit ? Colors.grey.shade400 : Colors.grey.shade700),
                             )),
                       ]),
               ));

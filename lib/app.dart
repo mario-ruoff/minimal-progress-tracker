@@ -37,6 +37,9 @@ class _MainPageState extends State<MainPage> {
   void _handleAuthChange() {
     // auth state change is also executed on app start
     FirebaseAuth.instance.authStateChanges().listen((User? user) async {
+      print("checking user");
+      print(user?.uid);
+      print(FirebaseAuth.instance.currentUser?.uid);
       signedIn = user != null;
       if (signedIn) {
         if (_names.isEmpty) {
