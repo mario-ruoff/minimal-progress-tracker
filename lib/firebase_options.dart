@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyCRIxY-c9kD9t-nN7sQqak6NqSl1tXl_MA',
-    appId: '1:85649441713:web:6d71a23cfa2e8349ba7390',
+    appId: '1:85649441713:web:907bf6f3cdb0c118ba7390',
     messagingSenderId: '85649441713',
     projectId: 'minimal-progress-tracker',
     authDomain: 'minimal-progress-tracker.firebaseapp.com',
