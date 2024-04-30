@@ -12,15 +12,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  if (kDebugMode) {
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.debug,
-    );
-  } else {
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.playIntegrity,
-    );
-  }
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    webProvider: ReCaptchaEnterpriseProvider('6LePZMopAAAAAKAJyYGURhXDnfS87nPVvCLB7F0h'),
+  );
   FirebaseUIAuth.configureProviders([
     GoogleProvider(clientId: "85649441713-s99pdkt3vl4bnhetovnnie2kcm7e2ooj.apps.googleusercontent.com"),
   ]);
