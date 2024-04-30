@@ -22,7 +22,7 @@ class _StatisticsState extends State<Statistics> {
     const Color(0xff02d39a),
   ];
   final int minDays = 7;
-  final int minValueScale = 10;
+  final int minValueScale = 1;
   final String locale = Platform.localeName;
 
   @override
@@ -36,29 +36,21 @@ class _StatisticsState extends State<Statistics> {
     return ListView.builder(
         padding: const EdgeInsets.only(top: 10),
         itemCount: widget.valueHistories.length,
-        itemExtent: 235,
+        itemExtent: 200,
         itemBuilder: (context, index) {
           return Container(
               margin: const EdgeInsets.all(5),
               child: Stack(
                 children: <Widget>[
-                  AspectRatio(
-                    aspectRatio: 2.0,
-                    child: DecoratedBox(
-                      decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(12),
-                          ),
-                          color: Color(0xff232d37)),
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          right: 18,
-                          left: 12,
-                          top: 44,
-                          bottom: 12,
+                  DecoratedBox(
+                    decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(12),
                         ),
-                        child: LineChart(mainData(widget.valueHistories[index])),
-                      ),
+                        color: Color(0xff232d37)),
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 18, left: 12, top: 44, bottom: 12),
+                      child: LineChart(mainData(widget.valueHistories[index])),
                     ),
                   ),
                   Padding(
