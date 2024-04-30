@@ -34,6 +34,16 @@ class _MainPageState extends State<MainPage> {
     _handleAuthChange();
   }
 
+  // Set value states callback
+  callback(names, descriptions, valueHistories) {
+    setState(() {
+      _names = names;
+      _descriptions = descriptions;
+      _valueHistories = valueHistories;
+      _dataLoaded = true;
+    });
+  }
+
   // Load data depending on user sign in status
   void _handleAuthChange() {
     // auth state change is also executed on app start
@@ -41,7 +51,7 @@ class _MainPageState extends State<MainPage> {
       signedIn = user != null;
       if (signedIn) {
         if (_names.isEmpty) {
-          // | Local -> Firestore |
+          // | Local -> Firestore | or initial load when logged in
           // | -     |  ?         | => load firestore data, no moving data
           _loadData();
         } else {
@@ -59,7 +69,7 @@ class _MainPageState extends State<MainPage> {
         }
       } else {
         if (_names.isEmpty) {
-          // | Local <- Firestore |
+          // | Local <- Firestore | or initial load when logged out
           // | ?      | -         | => load local data, no moving data
           _loadData();
         } else {
@@ -83,24 +93,24 @@ class _MainPageState extends State<MainPage> {
   Future<void> _loadData() async {
     final authUser = FirebaseAuth.instance.currentUser;
     signedIn = authUser != null;
-    List<String> names, descriptions;
-    List<Map<DateTime, int>> valueHistories;
 
     setState(() {
       _dataLoaded = false;
     });
 
     if (!signedIn) {
+      List<String> names, descriptions;
+      List<Map<DateTime, int>> valueHistories;
       (names, descriptions, valueHistories) = await _localStorage.loadData();
+      setState(() {
+        _names = names;
+        _descriptions = descriptions;
+        _valueHistories = valueHistories;
+        _dataLoaded = true;
+      });
     } else {
-      (names, descriptions, valueHistories) = await _firestore.loadData(authUser!.uid);
+      _firestore.initListener(authUser!.uid, callback);
     }
-    setState(() {
-      _names = names;
-      _descriptions = descriptions;
-      _valueHistories = valueHistories;
-      _dataLoaded = true;
-    });
   }
 
   // Clear data variables

@@ -4,6 +4,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreService {
   late DocumentReference _firestoreUser;
 
+  void initListener(var userUid, Function callback) {
+    _firestoreUser = FirebaseFirestore.instance.collection('users').doc(userUid);
+    final listener = _firestoreUser.collection('exercises').snapshots().listen((final snapshot) {
+      print('Firestore listener: ${snapshot.docs.length} exercises');
+      print(snapshot.metadata.isFromCache);
+      List<String> names = [];
+      List<String> descriptions = [];
+      List<Map<DateTime, int>> valueHistories = [];
+      callback(names, descriptions, valueHistories);
+    });
+  }
+
   Future loadData(var userUid) async {
     // Set firestore user reference and exercises query
     _firestoreUser = FirebaseFirestore.instance.collection('users').doc(userUid);
