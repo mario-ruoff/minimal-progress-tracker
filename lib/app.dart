@@ -138,6 +138,12 @@ class _MainPageState extends State<MainPage> {
     } else {
       _firestore.removeExercise(index);
     }
+    // Exit edit mode if no exercises left
+    if (_names.isEmpty) {
+      setState(() {
+        _editMode = false;
+      });
+    }
   }
 
   // Update exercise
@@ -331,7 +337,7 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: Text(widget.titles[_currentPageIndex]),
         actions: [
-          if (_currentPageIndex == 0)
+          if (_currentPageIndex == 0 && _names.isNotEmpty)
             IconButton(
               icon: Icon(_editMode ? Icons.done : Icons.edit),
               tooltip: 'Edit exercises',
