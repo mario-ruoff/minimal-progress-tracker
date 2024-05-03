@@ -355,16 +355,20 @@ class _MainPageState extends State<MainPage> {
               stream: FirebaseAuth.instance.authStateChanges(),
               builder: (context, snapshot) {
                 return IconButton(
-                  icon: !snapshot.hasData || snapshot.data!.photoURL == null || networkImageError
-                      ? CircleAvatar(
-                          child: Text(snapshot.hasData ? snapshot.data!.displayName![0] : 'U'),
-                        )
-                      : CircleAvatar(
-                          backgroundImage: NetworkImage(snapshot.data!.photoURL!),
-                          onBackgroundImageError: (exception, stackTrace) => setState(() {
-                            networkImageError = true;
-                          }),
-                        ),
+                  icon: !snapshot.hasData
+                      ? const Icon(Icons.account_circle) // User is not signed in
+                      : (snapshot.data!.photoURL == null || networkImageError
+                          ? CircleAvatar(
+                              // User is signed in, but no profile picture
+                              child: Text(snapshot.hasData ? snapshot.data!.displayName![0] : 'U'),
+                            )
+                          : CircleAvatar(
+                              // User is signed in and has a profile picture
+                              backgroundImage: NetworkImage(snapshot.data!.photoURL!),
+                              onBackgroundImageError: (exception, stackTrace) => setState(() {
+                                networkImageError = true;
+                              }),
+                            )),
                   tooltip: 'User Profile',
                   onPressed: () => {
                     Scaffold.of(context).openEndDrawer(),
