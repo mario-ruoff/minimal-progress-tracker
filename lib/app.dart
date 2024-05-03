@@ -19,6 +19,7 @@ class _MainPageState extends State<MainPage> {
   final _localStorage = LocalStorageService();
   final _firestore = FirestoreService();
   late bool signedIn;
+  bool networkImageError = false;
   int _currentPageIndex = 0;
   bool _editMode = false;
   bool _dataLoaded = false;
@@ -90,10 +91,11 @@ class _MainPageState extends State<MainPage> {
       _dataLoaded = false;
     });
 
+    // Load data from shared preferences or cached firestore
     if (!signedIn) {
       (names, descriptions, valueHistories) = await _localStorage.loadData();
     } else {
-      (names, descriptions, valueHistories) = await _firestore.loadData(authUser!.uid);
+      (names, descriptions, valueHistories) = await _firestore.loadData(authUser!.uid, true);
     }
     setState(() {
       _names = names;
@@ -101,6 +103,8 @@ class _MainPageState extends State<MainPage> {
       _valueHistories = valueHistories;
       _dataLoaded = true;
     });
+
+    // If cached firestore data is loaded, load from firestore
   }
 
   // Clear data variables
@@ -351,11 +355,15 @@ class _MainPageState extends State<MainPage> {
               stream: FirebaseAuth.instance.authStateChanges(),
               builder: (context, snapshot) {
                 return IconButton(
-                  icon: !snapshot.hasData || snapshot.data!.photoURL == null
-                      ? const Icon(Icons.account_circle)
+                  icon: !snapshot.hasData || snapshot.data!.photoURL == null || networkImageError
+                      ? CircleAvatar(
+                          child: Text(snapshot.hasData ? snapshot.data!.displayName![0] : 'U'),
+                        )
                       : CircleAvatar(
-                          backgroundImage: NetworkImage(snapshot.data!.photoURL ?? ''),
-                          backgroundColor: Colors.transparent,
+                          backgroundImage: NetworkImage(snapshot.data!.photoURL!),
+                          onBackgroundImageError: (exception, stackTrace) => setState(() {
+                            networkImageError = true;
+                          }),
                         ),
                   tooltip: 'User Profile',
                   onPressed: () => {

@@ -3,8 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 // Store and retreive data from Firestore
 class FirestoreService {
   late DocumentReference _firestoreUser;
+  // static const _cacheOptions = GetOptions(source: Source.cache);
+  // static const _serverOptions = GetOptions(source: Source.server);
 
-  Future loadData(var userUid) async {
+  Future loadData(final userUid, final onlyCached) async {
     // Set firestore user reference and exercises query
     _firestoreUser = FirebaseFirestore.instance.collection('users').doc(userUid);
     List<String> names = [];
@@ -18,23 +20,29 @@ class FirestoreService {
       FirebaseFirestore.instance.collection('users').doc(userUid).set({});
     } else {
       // If user exists, load exercises data from firestore
-      final exercisesSnapshot = await _firestoreUser.collection('exercises').orderBy("orderIndex").get();
-      for (final exerciseSnapshot in exercisesSnapshot.docs) {
-        final exercise = exerciseSnapshot.data();
-        names.add(exercise['name']);
-        descriptions.add(exercise['description']);
-
-        // Get value history data from firestore
-        Map<DateTime, int> historyMap = {};
-        final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').orderBy("date").get();
-        for (final historySnapshot in historiesSnapshot.docs) {
-          final valueHistory = historySnapshot.data();
-          historyMap[valueHistory['date'].toDate()] = valueHistory['amount'];
-        }
-        valueHistories.add(historyMap);
-      }
+      (names, descriptions, valueHistories) = await getExercises(names, descriptions, valueHistories, onlyCached);
     }
 
+    return (names, descriptions, valueHistories);
+  }
+
+  Future getExercises(names, descriptions, valueHistories, onlyCached) async {
+    // final options = onlyCached ? _cacheOptions : _serverOptions;
+    final exercisesSnapshot = await _firestoreUser.collection('exercises').orderBy("orderIndex").get();
+    for (final exerciseSnapshot in exercisesSnapshot.docs) {
+      final exercise = exerciseSnapshot.data();
+      names.add(exercise['name']);
+      descriptions.add(exercise['description']);
+
+      // Get value history data from firestore
+      Map<DateTime, int> historyMap = {};
+      final historiesSnapshot = await exerciseSnapshot.reference.collection('valueHistory').orderBy("date").get();
+      for (final historySnapshot in historiesSnapshot.docs) {
+        final valueHistory = historySnapshot.data();
+        historyMap[valueHistory['date'].toDate()] = valueHistory['amount'];
+      }
+      valueHistories.add(historyMap);
+    }
     return (names, descriptions, valueHistories);
   }
 
