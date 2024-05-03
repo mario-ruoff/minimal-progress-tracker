@@ -105,6 +105,14 @@ class _MainPageState extends State<MainPage> {
     });
 
     // If cached firestore data is loaded, load from firestore
+    if (signedIn) {
+      (names, descriptions, valueHistories) = await _firestore.getExercises(false);
+      setState(() {
+        _names = names;
+        _descriptions = descriptions;
+        _valueHistories = valueHistories;
+      });
+    }
   }
 
   // Clear data variables
