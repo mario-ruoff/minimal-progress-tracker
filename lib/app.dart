@@ -126,7 +126,7 @@ class _MainPageState extends State<MainPage> {
     if (!signedIn) {
       _localStorage.updateAllPreferences(_names, _descriptions, _valueHistories);
     } else {
-      _firestore.addExercise(_exerciseName, _exerciseDescription, _names.length, getCurrentDate());
+      _firestore.addExercise(_exerciseName, _exerciseDescription, _names.length - 1, getCurrentDate());
     }
   }
 
