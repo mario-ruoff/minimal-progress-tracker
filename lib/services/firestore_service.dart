@@ -114,20 +114,23 @@ class FirestoreService {
   void reorderExercises(int oldIndex, int newIndex) async {
     // Set exercise oldIndex to newIndex
     final exercisesSnapshot = await _firestoreUser.collection('exercises').orderBy('orderIndex').get();
-    exercisesSnapshot.docs[oldIndex].reference.update({'orderIndex': newIndex});
+    final batch = FirebaseFirestore.instance.batch();
+    batch.update(exercisesSnapshot.docs[oldIndex].reference, {'orderIndex': newIndex});
 
     // Action for moving exercise up
     if (newIndex > oldIndex) {
-      for (int i = oldIndex + 1; i < newIndex; i++) {
-        exercisesSnapshot.docs[i].reference.update({'orderIndex': i - 1});
+      for (int i = oldIndex + 1; i <= newIndex; i++) {
+        batch.update(exercisesSnapshot.docs[i].reference, {'orderIndex': i - 1});
       }
     }
     // Action for moving exercise down
     else {
       for (int i = newIndex; i < oldIndex; i++) {
-        exercisesSnapshot.docs[i].reference.update({'orderIndex': i + 1});
+        batch.update(exercisesSnapshot.docs[i].reference, {'orderIndex': i + 1});
       }
     }
+
+    await batch.commit();
   }
 
   Future<bool> isDataOnFirestore(final userUid) async {
