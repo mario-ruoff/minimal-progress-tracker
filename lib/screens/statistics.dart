@@ -61,6 +61,7 @@ class _StatisticsState extends State<Statistics> {
                           fontSize: 18,
                           color: Colors.grey[400],
                         ),
+                        maxLines: 1,
                       )),
                 ],
               ));

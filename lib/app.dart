@@ -236,6 +236,7 @@ class _MainPageState extends State<MainPage> {
                 children: [
                   TextFormField(
                     autofocus: true,
+                    maxLength: 20,
                     initialValue: name,
                     decoration: const InputDecoration(labelText: 'Exercise name', hintText: 'e.g. Pushups'),
                     onChanged: (value) {
@@ -245,6 +246,7 @@ class _MainPageState extends State<MainPage> {
                     },
                   ),
                   TextFormField(
+                    maxLength: 30,
                     initialValue: description,
                     decoration: const InputDecoration(labelText: 'Description', hintText: 'e.g. Wide Grip'),
                     onChanged: (value) {

@@ -45,8 +45,8 @@ class _ExerciseListState extends State<ExerciseList> {
                 leading: widget.editMode
                     ? ReorderableDragStartListener(index: index, child: const Icon(Icons.drag_handle))
                     : null,
-                title: Text(exercise),
-                subtitle: Text(description),
+                title: Text(exercise, maxLines: 1),
+                subtitle: Text(description, maxLines: 1),
                 trailing: widget.editMode
                     ? Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
                         IconButton(
