@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="Logo" src="assets/icon.png" width="128" />
+  <img alt="Logo" src="assets/icon/icon.png" width="128" />
   <h1 align="center">Minimal Progress Tracker</h1>
 </p>
 
